@@ -1,9 +1,23 @@
 {
     "name": "drm-mina-sequencer",
     "version": "1.0.0",
-    "main": "index.js",
+    "type": "module",
+    "main": "server.ts",
+    "watch": {
+        "build-and-start": {
+            "patterns": [
+                "src"
+            ],
+            "extensions": [
+                "*"
+            ]
+        }
+    },
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "build": "tsc -p tsconfig.json",
+        "start": "node --experimental-specifier-resolution=node dist/server.js",
+        "build-and-start": "pnpm run build && pnpm run start",
+        "dev": "npm-watch build-and-start"
     },
     "keywords": [],
     "author": "",
