@@ -6,10 +6,9 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import serveStatic from "serve-static";
-import { Field, JsonProof, PrivateKey, PublicKey, Signature, UInt64 } from "o1js";
+import { Field, PrivateKey, PublicKey, Signature } from "o1js";
 import AWS from "aws-sdk";
 import Client from "mina-signer";
-import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import rateLimit from "express-rate-limit";
 import { Request, Response, NextFunction } from "express";
@@ -39,7 +38,7 @@ mongoDb.once("open", function () {
     logger.info("Connected successfully to MongoDB");
 });
 
-const verifyClient = new Client({ network: "mainnet" });
+const verifyClient = new Client({ network: "testnet" });
 
 const app = express();
 const port = 3333;
@@ -83,29 +82,23 @@ app.get("/auth/challenge/:publicKey", (req, res) => {
 });
 
 app.post("/auth/verify", async (req, res) => {
-    const { publicKey, signature, nonce } = req.body;
+    const { signature } = req.body;
 
-    if (!publicKey || !signature || !nonce) {
-        return res.status(400).send({ message: "Missing parameters" });
-    }
-
-    if (!MINA_ADDRESS_REGEX.test(publicKey)) {
-        return res.status(400).send({ message: "Invalid public key" });
-    }
-
-    const storedNonce = nonces.get(publicKey);
-    if (!storedNonce || storedNonce !== nonce) {
-        return res.status(400).send({ message: "Invalid nonce" });
-    }
-
-    if (!(signature instanceof Signature)) {
-        return res.status(400).send({ message: "Invalid signature" });
+    if (!signature) {
+        return res.status(400).send({ message: "Missing signature" });
     }
 
     try {
-        const nonceField = Field.from(nonce);
-        const isValid = signature.verify(PublicKey.fromBase58(publicKey), [nonceField]);
-        if (isValid) {
+        const verifyResult = verifyClient.verifyMessage(signature);
+        const { publicKey, data } = signature;
+
+        logger.info("Signature request from " + publicKey);
+
+        const storedNonce = nonces.get(publicKey);
+        if (!storedNonce || BigInt(storedNonce) !== BigInt(data)) {
+            return res.status(400).send({ message: "Invalid nonce" });
+        }
+        if (verifyResult) {
             nonces.delete(publicKey);
 
             if (!process.env.JWT_SECRET) {
@@ -114,12 +107,14 @@ app.post("/auth/verify", async (req, res) => {
 
             const token = jwt.sign({ publicKey }, process.env.JWT_SECRET, { expiresIn: "1h" });
 
+            logger.info("Token generated " + token);
             res.json({ message: "Authentication successful", token });
         } else {
+            logger.error("Invalid signature");
             res.status(400).send({ message: "Invalid signature" });
         }
     } catch (err) {
-        console.error(err);
+        logger.error(err);
         res.status(500).send({ message: "Error verifying signature" });
     }
 });
@@ -130,13 +125,13 @@ function authenticateToken(req: Request, res: Response, next: NextFunction) {
     if (!token) return res.status(401).send({ message: "No token provided" });
 
     if (!process.env.JWT_SECRET) {
-        console.error("JWT_SECRET environment variable is not defined");
+        logger.error("JWT_SECRET environment variable is not defined");
         return res.status(500).send({ message: "Internal server error" });
     }
 
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
         if (err) {
-            console.error(err);
+            logger.error(err);
             return res.status(403).send({ message: "Invalid token" });
         }
         // req.user = user;
@@ -182,7 +177,7 @@ app.post("/wishlist", authenticateToken, async (req, res) => {
             logger.info("Game " + gameId + " added to wishlist user" + publicKey + ".");
         }
     } catch (err) {
-        console.error(err);
+        logger.error(err);
         res.status(500).send({ message: "Error when adding game to wishlist" });
     }
 });
@@ -205,7 +200,7 @@ app.get("/wishlist", authenticateToken, async (req, res) => {
         logger.info("Wishlist Sended user" + publicKey + ".");
         res.json(user ? user.wishlistedGames : []);
     } catch (err) {
-        console.error(err);
+        logger.error(err);
         res.status(500).send({ message: "Error retrieving wishlist" });
     }
 });
@@ -272,7 +267,7 @@ app.post("/slot-names", authenticateToken, async (req, res) => {
                 return;
             }
         } catch (err) {
-            console.error(err);
+            logger.error(err);
             res.status(500).send({ message: "Error saving slots" });
         }
     } else {
@@ -311,7 +306,7 @@ app.post("/slot-names", authenticateToken, async (req, res) => {
                 res.json(["Slot 1", "Slot 2", "Slot 3", "Slot 4"]);
             }
         } catch (err) {
-            console.error(err);
+            logger.error(err);
             res.status(500).send({ message: "Error retrieving slots" });
         }
     }
