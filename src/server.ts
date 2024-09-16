@@ -6,9 +6,13 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import serveStatic from "serve-static";
-import { JsonProof, PrivateKey, UInt64 } from "o1js";
+import { Field, JsonProof, PrivateKey, PublicKey, Signature, UInt64 } from "o1js";
 import AWS from "aws-sdk";
 import Client from "mina-signer";
+import crypto from "crypto";
+import jwt from "jsonwebtoken";
+import rateLimit from "express-rate-limit";
+import { Request, Response, NextFunction } from "express";
 
 dotenv.config();
 
@@ -16,13 +20,13 @@ const senderKey = PrivateKey.random();
 const sender = senderKey.toPublicKey();
 let nonce = 0;
 
-// const s3 = new AWS.S3({
-//     // @ts-ignore
-//     endpoint: new AWS.Endpoint(process.env.CF_ENDPOINT),
-//     accessKeyId: process.env.CF_ACCESS_KEY_ID,
-//     secretAccessKey: process.env.CF_SECRET_ACCESS_KEY,
-//     signatureVersion: "v4",
-// });
+const s3 = new AWS.S3({
+    // @ts-ignore
+    endpoint: new AWS.Endpoint(process.env.CF_ENDPOINT),
+    accessKeyId: process.env.CF_ACCESS_KEY_ID,
+    secretAccessKey: process.env.CF_SECRET_ACCESS_KEY,
+    signatureVersion: "v4",
+});
 
 //@ts-ignore
 mongoose.connect(process.env.MONGO);
@@ -56,9 +60,92 @@ app.get("/game-data", async (req, res) => {
     }
 });
 
-app.post("/wishlist/:publicKey", async (req, res) => {
+const nonces = new Map();
+
+app.get("/auth/challenge/:publicKey", (req, res) => {
     const { publicKey } = req.params;
-    const { gameId } = req.body;
+
+    if (!publicKey) {
+        return res.status(400).send({ message: "Public key not provided" });
+    }
+
+    if (!MINA_ADDRESS_REGEX.test(publicKey)) {
+        return res.status(400).send({ message: "Invalid public key" });
+    }
+
+    const nonce = Field.random().toString();
+    nonces.set(publicKey, nonce);
+
+    // Remove the nonce after 5 minutes to prevent reuse
+    setTimeout(() => nonces.delete(publicKey), 5 * 60 * 1000);
+
+    res.json({ nonce });
+});
+
+app.post("/auth/verify", async (req, res) => {
+    const { publicKey, signature, nonce } = req.body;
+
+    if (!publicKey || !signature || !nonce) {
+        return res.status(400).send({ message: "Missing parameters" });
+    }
+
+    if (!MINA_ADDRESS_REGEX.test(publicKey)) {
+        return res.status(400).send({ message: "Invalid public key" });
+    }
+
+    const storedNonce = nonces.get(publicKey);
+    if (!storedNonce || storedNonce !== nonce) {
+        return res.status(400).send({ message: "Invalid nonce" });
+    }
+
+    if (!(signature instanceof Signature)) {
+        return res.status(400).send({ message: "Invalid signature" });
+    }
+
+    try {
+        const nonceField = Field.from(nonce);
+        const isValid = signature.verify(PublicKey.fromBase58(publicKey), [nonceField]);
+        if (isValid) {
+            nonces.delete(publicKey);
+
+            if (!process.env.JWT_SECRET) {
+                throw new Error("JWT_SECRET environment variable is not defined");
+            }
+
+            const token = jwt.sign({ publicKey }, process.env.JWT_SECRET, { expiresIn: "1h" });
+
+            res.json({ message: "Authentication successful", token });
+        } else {
+            res.status(400).send({ message: "Invalid signature" });
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send({ message: "Error verifying signature" });
+    }
+});
+
+function authenticateToken(req: Request, res: Response, next: NextFunction) {
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
+    if (!token) return res.status(401).send({ message: "No token provided" });
+
+    if (!process.env.JWT_SECRET) {
+        console.error("JWT_SECRET environment variable is not defined");
+        return res.status(500).send({ message: "Internal server error" });
+    }
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+        if (err) {
+            console.error(err);
+            return res.status(403).send({ message: "Invalid token" });
+        }
+        // req.user = user;
+        next();
+    });
+}
+
+app.post("/wishlist", authenticateToken, async (req, res) => {
+    const { publicKey, gameId } = req.body;
 
     if (!gameId) {
         res.status(400).send({ message: "Game ID not provided" });
@@ -100,8 +187,8 @@ app.post("/wishlist/:publicKey", async (req, res) => {
     }
 });
 
-app.get("/wishlist/:publicKey", async (req, res) => {
-    const { publicKey } = req.params;
+app.get("/wishlist", authenticateToken, async (req, res) => {
+    const { publicKey, gameId } = req.body;
 
     if (!publicKey) {
         res.status(400).send({ message: "Public key not provided" });
@@ -123,10 +210,8 @@ app.get("/wishlist/:publicKey", async (req, res) => {
     }
 });
 
-app.post("/slot-names/:publicKey", async (req, res) => {
-    const { publicKey } = req.params;
-    const { gameId } = req.body;
-    const { slotNames } = req.body;
+app.post("/slot-names", authenticateToken, async (req, res) => {
+    const { publicKey, gameId, slotNames } = req.body;
 
     if (!gameId) {
         res.status(400).send({ message: "Game ID not provided" });
@@ -232,29 +317,38 @@ app.post("/slot-names/:publicKey", async (req, res) => {
     }
 });
 
-// TODO: Add limit rate
-// app.post("/get-signed-url", async (req, res) => {
-//     const { fileName } = req.body;
+const getSignedUrlLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour window
+    max: 5, // Limit each IP to 5 requests per windowMs
+    message: {
+        message: "Too many requests, please try again later.",
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
 
-//     if (!fileName) {
-//         res.status(400).send({ message: "File name not provided" });
-//         return;
-//     }
+app.post("/get-signed-url", getSignedUrlLimiter, async (req, res) => {
+    const { fileName } = req.body;
 
-//     try {
-//         const params = {
-//             Bucket: process.env.CF_BUCKET,
-//             Key: fileName,
-//             Expires: 600,
-//         };
-//         const url = s3.getSignedUrl("getObject", params);
-//         logger.info("Signed URL generated: " + url);
-//         res.status(201).send({ url });
-//     } catch (err) {
-//         logger.error(err);
-//         res.status(506).send({ message: "Error generating signed url" });
-//     }
-// });
+    if (!fileName) {
+        res.status(400).send({ message: "File name not provided" });
+        return;
+    }
+
+    try {
+        const params = {
+            Bucket: process.env.CF_BUCKET,
+            Key: fileName,
+            Expires: 600,
+        };
+        const url = s3.getSignedUrl("getObject", params);
+        logger.info("Signed URL generated: " + url);
+        res.status(201).send({ url });
+    } catch (err) {
+        logger.error(err);
+        res.status(506).send({ message: "Error generating signed url" });
+    }
+});
 
 app.listen(port, () => {
     logger.info(`Server running on http://localhost:${port}`);
