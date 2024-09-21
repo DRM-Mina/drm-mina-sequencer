@@ -7,6 +7,8 @@ const games = [
         creator: "Eren Kardas",
         imageFolder: "diamond",
         imageCount: 3,
+        price: 10,
+        discount: 2,
         tags: ["Action", "Adventure", "Survival"],
         downloadable: true,
     },
@@ -18,6 +20,8 @@ const games = [
         creator: "Shap Shup Games",
         imageFolder: "kindasus",
         imageCount: 3,
+        price: 20,
+        discount: 10,
         tags: ["Simulation", "Puzzle"],
         downloadable: true,
     },
@@ -29,72 +33,8 @@ const games = [
         creator: "Eren Kardas",
         imageFolder: "barbarian",
         imageCount: 0,
-        tags: ["Action", "Adventure", "RPG"],
-        downloadable: false,
-    },
-    {
-        id: 4,
-        name: "Car Race",
-        description:
-            "Car Race is a fast-paced racing game where you compete against other players in various tracks.",
-        creator: "Hokus Pokus Games",
-        imageFolder: "car-race",
-        imageCount: 0,
-        tags: ["Racing", "Sports"],
-        downloadable: false,
-    },
-    {
-        id: 5,
-        name: "Cyberpunk",
-        description:
-            "Cyberpunk is a futuristic open-world game where you navigate a dystopian city and unimageFolder its secrets.",
-        creator: "Cyborg Games",
-        imageFolder: "cyberpunk",
-        imageCount: 0,
-        tags: ["Action", "Adventure", "RPG"],
-        downloadable: false,
-    },
-    {
-        id: 6,
-        name: "Medieval",
-        description:
-            "Medieval is a medieval-themed strategy game where you build and manage your own kingdom.",
-        creator: "duldul osman",
-        imageFolder: "medieval",
-        imageCount: 0,
-        tags: ["Action", "Adventure", "RPG"],
-        downloadable: false,
-    },
-    {
-        id: 7,
-        name: "Soul Hunting",
-        description:
-            "Soul Hunting is an action RPG where you hunt down powerful creatures to collect their souls and gain new abilities.",
-        creator: "Soul Games",
-        imageFolder: "soul-hunting",
-        imageCount: 0,
-        tags: ["Action", "Adventure", "RPG"],
-        downloadable: false,
-    },
-    {
-        id: 8,
-        name: "Lost in Space",
-        description:
-            "Lost in Space is a sci-fi adventure game where you explore the vastness of space and encounter alien civilizations.",
-        creator: "Space Games",
-        imageFolder: "lost-in-space",
-        imageCount: 0,
-        tags: ["Action", "Adventure", "RPG"],
-        downloadable: false,
-    },
-    {
-        id: 9,
-        name: "Murderer Chicken",
-        description:
-            "Murderer Chicken is a quirky puzzle game where you control a chicken on a mission to solve mysterious murders.",
-        creator: "Chicken Wings",
-        imageFolder: "murderer-chicken",
-        imageCount: 0,
+        price: 15,
+        discount: 5,
         tags: ["Action", "Adventure", "RPG"],
         downloadable: false,
     },
@@ -107,6 +47,8 @@ export interface Game {
     creator: string;
     imageFolder: string;
     imageCount: number;
+    price: number;
+    discount: number;
     tags: string[];
     downloadable: boolean;
 }

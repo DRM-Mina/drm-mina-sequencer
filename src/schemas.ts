@@ -10,6 +10,8 @@ const gameSchema = new Schema(
         creator: String,
         imageFolder: String,
         imageCount: Number,
+        price: Number,
+        discount: Number,
         tags: [String],
         downloadable: Boolean,
     },

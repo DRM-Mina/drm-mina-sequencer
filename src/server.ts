@@ -182,8 +182,8 @@ app.post("/wishlist", authenticateToken, async (req, res) => {
     }
 });
 
-app.get("/wishlist", authenticateToken, async (req, res) => {
-    const { publicKey, gameId } = req.body;
+app.get("/wishlist/:publicKey", authenticateToken, async (req, res) => {
+    const { publicKey } = req.params;
 
     if (!publicKey) {
         res.status(400).send({ message: "Public key not provided" });
@@ -200,7 +200,7 @@ app.get("/wishlist", authenticateToken, async (req, res) => {
         logger.info("Wishlist Sended user" + publicKey + ".");
         res.json(user ? user.wishlistedGames : []);
     } catch (err) {
-        logger.error(err);
+        console.error(err);
         res.status(500).send({ message: "Error retrieving wishlist" });
     }
 });
