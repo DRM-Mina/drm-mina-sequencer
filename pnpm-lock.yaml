@@ -14,6 +14,9 @@ dependencies:
   dotenv:
     specifier: ^16.4.5
     version: 16.4.5
+  drm-mina-contracts:
+    specifier: ^0.3.5
+    version: 0.3.5(o1js@1.7.0)
   express:
     specifier: ^4.19.2
     version: 4.19.2
@@ -460,6 +463,16 @@ packages:
   /dotenv@16.4.5:
     resolution: {integrity: sha512-ZmdL2rui+eB2YwhsWzjInR8LldtZHGDoQ1ugH85ppHKwpUHL7j7rN0Ti9NCnGiQbhaZ11FpR+7ao1dNsmduNUg==}
     engines: {node: '>=12'}
+    dev: false
+
+  /drm-mina-contracts@0.3.5(o1js@1.7.0):
+    resolution: {integrity: sha512-AIB+CmpUCpJgnDyvZF3cPLn4QCf7DgffxGellyB/KXdXJto8vs/ezs2NhdvDfEth6vgElG6rvvHzGHmrjfhaRw==}
+    engines: {node: '>=18.14.0'}
+    peerDependencies:
+      o1js: ^1.*
+    dependencies:
+      dotenv: 16.4.5
+      o1js: 1.7.0
     dev: false
 
   /ecdsa-sig-formatter@1.0.11:
