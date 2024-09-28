@@ -7,6 +7,8 @@ const games = [
         creator: "Eren Kardas",
         imageFolder: "diamond",
         imageCount: 3,
+        gameTokenContractAddress: "B62qmsjhW3v8XQXHPAJairdpVrLD7RRmzWXCkgZUAsbXbmn2UMGdrYm",
+        DRMContractAddress: "B62qqRywXrc1oVB7j32dSFa8FMdFK2xcrXR582URketKkKUxPaJRQ1F",
         price: 10,
         discount: 2,
         tags: ["Action", "Adventure", "Survival"],
@@ -20,6 +22,8 @@ const games = [
         creator: "Shap Shup Games",
         imageFolder: "kindasus",
         imageCount: 3,
+        gameTokenContractAddress: "B62qnMyraURPLjknvNRfrqBs3oRyHk5RoqS2UZ6tvsCRfJW6zn22YRy",
+        DRMContractAddress: "B62qp1eadzAauKY3nCHbokiBRGD7FcjMqohri4fBsUGXRHLp6k38As2",
         price: 20,
         discount: 10,
         tags: ["Simulation", "Puzzle"],
@@ -33,6 +37,8 @@ const games = [
         creator: "Eren Kardas",
         imageFolder: "barbarian",
         imageCount: 0,
+        gameTokenContractAddress: "B62qmhFa6giGSBEQfeHhvuKAr6dFK13NDZQWzCWFoqNsUGaZBHpJ4dD",
+        DRMContractAddress: "B62qkxrSC8euSFu8ufhZ3hDoXV7A3v1k7gNEFsXZ4H7YrcHypxFXxSY",
         price: 15,
         discount: 5,
         tags: ["Action", "Adventure", "RPG"],
@@ -47,6 +53,8 @@ export interface Game {
     creator: string;
     imageFolder: string;
     imageCount: number;
+    gameTokenContractAddress: string;
+    DRMContractAddress: string;
     price: number;
     discount: number;
     tags: string[];
