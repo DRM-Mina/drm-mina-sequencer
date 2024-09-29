@@ -2,7 +2,7 @@
     "name": "drm-mina-sequencer",
     "version": "1.0.0",
     "type": "module",
-    "main": "server.ts",
+    "main": "app.ts",
     "watch": {
         "build-and-start": {
             "patterns": [
@@ -15,9 +15,10 @@
     },
     "scripts": {
         "build": "tsc -p tsconfig.json",
-        "start": "node --experimental-specifier-resolution=node dist/server.js",
+        "start": "node --experimental-specifier-resolution=node dist/app.js",
         "build-and-start": "pnpm run build && pnpm run start",
-        "dev": "npm-watch build-and-start"
+        "dev": "npm-watch build-and-start",
+        "prod": "npm run build && pm2 start dist/app.js --name drm-mina-sequencer"
     },
     "keywords": [],
     "author": "",
@@ -31,6 +32,7 @@
         "express": "^4.19.2",
         "express-rate-limit": "^7.4.0",
         "graphql": "^16.9.0",
+        "helmet": "^7.1.0",
         "jsonwebtoken": "^9.0.2",
         "mina-signer": "^3.0.7",
         "mongodb": "^6.8.1",
