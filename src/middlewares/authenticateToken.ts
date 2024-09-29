@@ -17,7 +17,7 @@ export function authenticateToken(req: Request, res: Response, next: NextFunctio
             logger.error(err);
             return res.status(403).send({ message: "Invalid token" });
         }
-        // req.user = user;
+
         next();
     });
 }
