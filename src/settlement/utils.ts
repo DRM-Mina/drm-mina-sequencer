@@ -1,8 +1,6 @@
 import { DRM, offchainState, StateProof } from "drm-mina-contracts";
-import { Mina, PrivateKey } from "o1js";
+import { Mina } from "o1js";
 import { CycleConfig, SettlementInputs } from "./types.js";
-
-export const MINA_ADDRESS_REGEX = /^B62q[1-9A-HJ-NP-Za-km-z]{51}$/;
 
 export function checkEnv(input: string | undefined, message: string): string {
     if (input === undefined) {
@@ -62,7 +60,6 @@ export async function settlementCycle({ drm, feepayerKey, counter = 0, config }:
             actions > 0 &&
             (actions > config.MIN_ACTIONS_TO_REDUCE || counter > config.MAX_RETRIES_BEFORE_REDUCE);
         if (actions === 0) {
-            // If there is nothing to reduce, don't call settle, and don't increment the counter
             setTimeout(settlementCycle, config.RETRY_WAIT_MS, {
                 drm,
                 feepayerKey,
@@ -70,7 +67,6 @@ export async function settlementCycle({ drm, feepayerKey, counter = 0, config }:
                 config,
             });
         } else if (shouldSettle) {
-            // If we should settle the state, then call settle, and reset the cycle to counter = 0
             await settle({ drm, feepayerKey });
             counter = 0;
             setTimeout(settlementCycle, config.RETRY_WAIT_MS, {
@@ -81,7 +77,6 @@ export async function settlementCycle({ drm, feepayerKey, counter = 0, config }:
                 config,
             });
         } else {
-            // Otherwise, increment the counter and wait for more actions
             counter++;
             setTimeout(settlementCycle, config.RETRY_WAIT_MS, {
                 drm,
@@ -92,7 +87,6 @@ export async function settlementCycle({ drm, feepayerKey, counter = 0, config }:
         }
     } catch (error) {
         console.log(error);
-        // TODO: If there is an error with the logic, this will just keep looping and catching the error, is there a better approach?
         setTimeout(settlementCycle, config.RETRY_WAIT_MS, {
             drm,
             feepayerKey,
