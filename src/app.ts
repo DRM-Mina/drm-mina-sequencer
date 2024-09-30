@@ -12,6 +12,7 @@ import slotNamesRoutes from "./routes/slotNames";
 import signedUrlRoutes from "./routes/signedUrl";
 import sessionRoutes from "./routes/session";
 import { envCheck } from "./utils/envCheck";
+import { commonLimiter } from "./middlewares/rateLimiter";
 
 envCheck();
 
@@ -22,6 +23,7 @@ app.use(cors());
 app.use(express.json());
 app.use(serveStatic("public"));
 app.use(helmet());
+app.use(commonLimiter);
 
 app.use("/auth", authRoutes);
 app.use("/game-data", gameDataRoutes);

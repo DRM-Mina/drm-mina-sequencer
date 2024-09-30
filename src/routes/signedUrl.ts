@@ -1,8 +1,8 @@
 import express, { Router } from "express";
 import AWS from "aws-sdk";
-import rateLimit from "express-rate-limit";
 import logger from "../logger";
 import dotenv from "dotenv";
+import { getSignedUrlLimiter } from "../middlewares/rateLimiter";
 dotenv.config();
 
 const router: Router = express.Router();
@@ -12,16 +12,6 @@ const s3 = new AWS.S3({
     accessKeyId: process.env.CF_ACCESS_KEY_ID,
     secretAccessKey: process.env.CF_SECRET_ACCESS_KEY,
     signatureVersion: "v4",
-});
-
-const getSignedUrlLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000,
-    max: 5,
-    message: {
-        message: "Too many requests, please try again later.",
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
 });
 
 router.post("/", getSignedUrlLimiter, async (req, res) => {
