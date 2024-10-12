@@ -2,9 +2,9 @@ import express, { Router } from "express";
 import jwt from "jsonwebtoken";
 import { Field } from "o1js";
 import Client from "mina-signer";
-import { MINA_ADDRESS_REGEX } from "../utils/constants";
+import { MINA_ADDRESS_REGEX } from "../utils/constants.js";
 
-import logger from "../logger";
+import logger from "../logger.js";
 
 const router: Router = express.Router();
 

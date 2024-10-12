@@ -2,17 +2,17 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import serveStatic from "serve-static";
-import logger from "./logger";
-import { connectToDatabase } from "./db/connection";
+import logger from "./logger.js";
+import { connectToDatabase } from "./db/connection.js";
 
-import authRoutes from "./routes/auth";
-import gameDataRoutes from "./routes/gameData";
-import wishlistRoutes from "./routes/wishlist";
-import slotNamesRoutes from "./routes/slotNames";
-import signedUrlRoutes from "./routes/signedUrl";
-import sessionRoutes from "./routes/session";
-import { envCheck } from "./utils/envCheck";
-import { commonLimiter } from "./middlewares/rateLimiter";
+import authRoutes from "./routes/auth.js";
+import gameDataRoutes from "./routes/gameData.js";
+import wishlistRoutes from "./routes/wishlist.js";
+import slotNamesRoutes from "./routes/slotNames.js";
+import signedUrlRoutes from "./routes/signedUrl.js";
+import sessionRoutes from "./routes/session.js";
+import { envCheck } from "./utils/envCheck.js";
+import { commonLimiter } from "./middlewares/rateLimiter.js";
 
 envCheck();
 

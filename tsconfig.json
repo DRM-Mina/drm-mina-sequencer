@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
         "outDir": "./dist",
+        "rootDir": "./src",
         "strictNullChecks": true,
         "lib": ["es2020"],
         "target": "ES2020",
@@ -17,5 +18,7 @@
         "declarationMap": true,
         "strictFunctionTypes": true,
         "skipLibCheck": true
-    }
+    },
+    "include": ["src/**/*.ts"],
+    "exclude": ["node_modules"]
 }

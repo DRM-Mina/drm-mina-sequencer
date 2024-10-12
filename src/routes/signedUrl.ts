@@ -1,8 +1,8 @@
 import express, { Router } from "express";
 import AWS from "aws-sdk";
-import logger from "../logger";
+import logger from "../logger.js";
 import dotenv from "dotenv";
-import { getSignedUrlLimiter } from "../middlewares/rateLimiter";
+import { getSignedUrlLimiter } from "../middlewares/rateLimiter.js";
 dotenv.config();
 
 const router: Router = express.Router();

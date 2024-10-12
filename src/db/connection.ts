@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import logger from "../logger";
+import logger from "../logger.js";
 
 export function connectToDatabase() {
     mongoose.connect(process.env.MONGO as string);

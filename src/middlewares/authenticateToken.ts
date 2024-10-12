@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import logger from "../logger";
+import logger from "../logger.js";
 
 export function authenticateToken(req: Request, res: Response, next: NextFunction) {
     const authHeader = req.headers["authorization"];

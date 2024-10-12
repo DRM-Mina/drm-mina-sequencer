@@ -1,9 +1,9 @@
 import express, { Router } from "express";
-import { User } from "../db/schemas";
-import { authenticateToken } from "../middlewares/authenticateToken";
-import { MINA_ADDRESS_REGEX } from "../utils/constants";
+import { User } from "../db/schemas.js";
+import { authenticateToken } from "../middlewares/authenticateToken.js";
+import { MINA_ADDRESS_REGEX } from "../utils/constants.js";
 
-import logger from "../logger";
+import logger from "../logger.js";
 
 const router: Router = express.Router();
 

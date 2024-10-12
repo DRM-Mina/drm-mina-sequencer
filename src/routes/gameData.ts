@@ -1,6 +1,6 @@
 import express, { Router } from "express";
-import { Game } from "../db/schemas";
-import logger from "../logger";
+import { Game } from "../db/schemas.js";
+import logger from "../logger.js";
 
 const router: Router = express.Router();
 
