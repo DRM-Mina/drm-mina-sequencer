@@ -35,6 +35,5 @@ const Network = Mina.Network({
     archive: archiveEndpoint,
 });
 Mina.setActiveInstance(Network);
-// Compile
 
 await settlementCycle(settlementCycleConfig);

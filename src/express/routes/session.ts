@@ -1,7 +1,14 @@
 import express, { Router } from "express";
 import logger from "../logger.js";
+import { Worker } from "worker_threads";
 
 const router: Router = express.Router();
+let worker;
+try {
+    // worker = new Worker("./dist/worker.js", { workerData: { gameDataArray: [] } });
+} catch (err) {
+    logger.error(err);
+}
 
 router.post("/", async (req, res) => {
     const { proof } = req.body;
