@@ -74,8 +74,6 @@ export async function initializeContracts(gameData: GameData[], gameContracts: G
                 drm,
             });
         }
-        console.log("Game contracts initialized");
-        console.log(gameContracts);
     } catch (err) {
         console.error(err);
     }
@@ -91,10 +89,7 @@ export async function fetchGamesFromDB() {
 }
 
 export async function updateGamePrices(gameContracts: GameContracts[]) {
-    logger.info("Updating game prices");
     const games: Game[] = await Game.find({});
-    logger.info(`Found ${games.length} games`);
-    console.log("GameContracts", gameContracts);
     const gamePrices = await Promise.all(
         gameContracts.map(async ({ gameTokenAddress, gameToken }) => {
             try {
@@ -113,8 +108,6 @@ export async function updateGamePrices(gameContracts: GameContracts[]) {
             }
         })
     );
-
-    logger.info("Game prices fetched");
 
     for (let i = 0; i < games.length; i++) {
         games[i].price = Number(gamePrices[i].price?.toString() || games[i].price) / 1000000000;
