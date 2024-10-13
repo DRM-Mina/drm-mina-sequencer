@@ -17,7 +17,7 @@ import { commonLimiter } from "./middlewares/rateLimiter.js";
 envCheck();
 
 const app = express();
-const port = process.env.PORT || 3333;
+const port = 3333;
 
 app.use(cors());
 app.use(express.json());
