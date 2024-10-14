@@ -1,9 +1,11 @@
 import { DRM } from "drm-mina-contracts/build/src/DRM.js";
 import { GameToken } from "drm-mina-contracts/build/src/GameToken.js";
-import { Mina, PublicKey, UInt64 } from "o1js";
+import { Mina, PublicKey } from "o1js";
 import { Game } from "./db/schemas.js";
 import dotenv from "dotenv";
 import logger from "./logger.js";
+import { DeviceSession } from "drm-mina-contracts/build/src/lib/DeviceSessionProof.js";
+
 dotenv.config();
 
 export interface GameData {
@@ -56,6 +58,16 @@ export async function compileContracts() {
         console.time("GameToken.compile");
         await GameToken.compile();
         console.timeEnd("GameToken.compile");
+
+        console.time("DeviceSession compile");
+        const { verificationKey } = await DeviceSession.compile();
+        console.timeEnd("DeviceSession compile");
+
+        if (!verificationKey) {
+            throw new Error("Failed to compile DeviceSession");
+        }
+
+        return verificationKey;
     } catch (err) {
         console.error(err);
     }
@@ -95,9 +107,7 @@ export async function updateGamePrices(gameContracts: GameContracts[]) {
             try {
                 const price = await gameToken.gamePrice.fetch();
                 const discount = await gameToken.discount.fetch();
-
                 logger.info(`Game ${gameTokenAddress} price: ${price}, discount: ${discount}`);
-
                 return { gameTokenAddress, price, discount };
             } catch (err) {
                 logger.error(
