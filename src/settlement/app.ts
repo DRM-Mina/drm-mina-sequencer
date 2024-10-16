@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 import { checkEnv, settlementCycle } from "./utils.js";
 import { Mina, PrivateKey } from "o1js";
 import { CycleConfig, SettlementConfig } from "./types.js";
-import { DRM } from "drm-mina-contracts";
+import { DRM } from "drm-mina-contracts/build/src/DRM.js";
 
 dotenv.config();
 
@@ -35,6 +35,5 @@ const Network = Mina.Network({
     archive: archiveEndpoint,
 });
 Mina.setActiveInstance(Network);
-// Compile
 
 await settlementCycle(settlementCycleConfig);

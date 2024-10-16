@@ -5,8 +5,11 @@ const logger = winston.createLogger({
     format: winston.format.combine(winston.format.colorize(), winston.format.simple()),
     defaultMeta: { service: "user-service" },
     transports: [
-        new winston.transports.File({ filename: "logs/error.log", level: "error" }),
-        new winston.transports.File({ filename: "logs/combined.log" }),
+        new winston.transports.File({
+            filename: "logs/settlement-sequencer-error.log",
+            level: "error",
+        }),
+        new winston.transports.File({ filename: "logs/settlement-sequencer-combined.log" }),
     ],
 });
 

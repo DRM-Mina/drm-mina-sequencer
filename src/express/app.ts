@@ -17,7 +17,7 @@ import { commonLimiter } from "./middlewares/rateLimiter.js";
 envCheck();
 
 const app = express();
-const port = process.env.PORT || 3333;
+const port = 3333;
 
 app.use(cors());
 app.use(express.json());
@@ -32,7 +32,12 @@ app.use("/slot-names", slotNamesRoutes);
 app.use("/get-signed-url", signedUrlRoutes);
 app.use("/submit-session", sessionRoutes);
 
-app.listen(port, () => {
-    logger.info(`Server running on http://localhost:${port}`);
-    connectToDatabase();
-});
+try {
+    await connectToDatabase();
+    app.listen(port, () => {
+        logger.info(`Server running on http://localhost:${port}`);
+    });
+} catch (err) {
+    logger.error("Failed to connect to the database:", err);
+    process.exit(1);
+}
