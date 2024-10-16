@@ -39,12 +39,12 @@ app.post("/", async (req, res) => {
         }
 
         const sessionProof = await DeviceSessionProof.fromJSON(JSON.parse(proof));
-        // const ok = await verify(sessionProof, verificationKey);
-        // if (!ok) {
-        //     return res.status(400).send("Invalid proof");
-        // }
+        const ok = await verify(sessionProof, verificationKey);
+        if (!ok) {
+            return res.status(400).send("Invalid proof");
+        }
 
-        // console.log(ok);
+        console.log(ok);
 
         const game = gameContracts.find((g) => {
             console.log(g.gameTokenAddress, sessionProof.publicOutput.gameToken.toBase58());
