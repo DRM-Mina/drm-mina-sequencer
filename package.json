@@ -15,10 +15,18 @@
     },
     "scripts": {
         "build": "tsc -p tsconfig.json",
-        "start": "node --experimental-specifier-resolution=node dist/app.js",
-        "build-and-start": "pnpm run build && pnpm run start",
-        "dev": "npm-watch build-and-start",
-        "prod": "npm run build && pm2 start dist/app.js --name drm-mina-sequencer"
+        "start:express": "node --experimental-specifier-resolution=node dist/express/app.js",
+        "build-and-start:express": "pnpm run build && pnpm run start:express",
+        "dev:express": "npm-watch build-and-start:express",
+        "prod:express": "npm run build && pm2 start dist/express/app.js --name drm-mina-sequencer",
+        "start:sequencer": "node --experimental-specifier-resolution=node dist/sequencer/app.js",
+        "build-and-start:sequencer": "pnpm run build && pnpm run start:sequencer",
+        "dev:sequencer": "npm-watch build-and-start:sequencer",
+        "prod:sequencer": "npm run build && pm2 start dist/sequencer/app.js --name drm-mina-sequencer-sequencer",
+        "start:settlement": "node --experimental-specifier-resolution=node dist/settlement/app.js",
+        "build-and-start:settlement": "pnpm run build && pnpm run start:settlement",
+        "dev:settlement": "npm-watch build-and-start:settlement",
+        "prod:settlement": "npm run build && pm2 start dist/settlement/app.js --name drm-mina-sequencer-settlement"
     },
     "keywords": [],
     "author": "",
