@@ -7,7 +7,7 @@ import logger from "../logger.js";
 
 const router: Router = express.Router();
 
-router.get("/", authenticateToken, async (req, res) => {
+router.post("/", authenticateToken, async (req, res) => {
     const { publicKey, gameId, slotNames } = req.body;
 
     if (!gameId) {

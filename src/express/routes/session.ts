@@ -31,17 +31,18 @@ router.post("/", async (req, res) => {
 
         const sessionProof = await DeviceSessionProof.fromJSON(JSON.parse(proof));
 
-        // const ok = await verify(sessionProof, verificationKey);
+        const ok = await verify(sessionProof, verificationKey);
 
-        // if (!ok) {
-        //     res.status(400).send({ message: "Invalid proof" });
-        //     return;
-        // }
-        // if (ok) {
-        //     logger.info("Proof verified");
-        // }
+        if (!ok) {
+            logger.error("Proof verification failed");
+            res.status(400).send({ message: "Invalid proof" });
+            return;
+        }
+        if (ok) {
+            logger.info("Proof verified");
+        }
 
-        console.log("Sending proof to sequencer", proof);
+        logger.info("Sending session to sequencer");
         const response = await axios.post(`${sequencerUrl}/`, {
             proof: proof,
         });

@@ -21,8 +21,8 @@ importers:
         specifier: ^16.4.5
         version: 16.4.5
       drm-mina-contracts:
-        specifier: ^0.3.6
-        version: 0.3.7(o1js@1.9.0)
+        specifier: ^0.4.0
+        version: 0.4.0(o1js@https://pkg.pr.new/o1-labs/o1js@fc16ce3)
       express:
         specifier: ^4.19.2
         version: 4.21.1
@@ -48,8 +48,8 @@ importers:
         specifier: ^8.6.1
         version: 8.7.1
       o1js:
-        specifier: ^1.7.0
-        version: 1.9.0
+        specifier: https://pkg.pr.new/o1-labs/o1js@fc16ce3
+        version: https://pkg.pr.new/o1-labs/o1js@fc16ce3
       serve-static:
         specifier: ^1.15.0
         version: 1.16.2
@@ -457,6 +457,13 @@ packages:
     peerDependencies:
       o1js: ^1.9
 
+  drm-mina-contracts@0.4.0:
+    resolution: {integrity: sha512-J7lQrZJ11mVta6uO1Np/p06M6R+Ahu/AZGeeMkiDBtRCQsvkNUcPFouQ6G+LSFIa1h8SnWzTlBpg8xfMHQdGkw==}
+    version: 0.4.0
+    engines: {node: '>=18.14.0'}
+    peerDependencies:
+      o1js: https://pkg.pr.new/o1-labs/o1js@fc16ce3
+
   ecdsa-sig-formatter@1.0.11:
     resolution: {integrity: sha512-nagl3RYrbNv6kQkeJIpt6NJZy8twLB/2vtz6yN9Z4vRKHN4/QZJIEbqohALSgwKdnksuY3k5Addp5lg8sVoVcQ==}
 
@@ -826,6 +833,12 @@ packages:
 
   o1js@1.9.0:
     resolution: {integrity: sha512-EbwrBtG9rZZ4hlg/qEB6bNQOE98WkpZ5hVxWvafbzZscDLE4CzY+F5KKF1+Ka8jhEJj6WDeEqT12acyvlYSa1w==}
+    engines: {node: '>=18.14.0'}
+    hasBin: true
+
+  o1js@https://pkg.pr.new/o1-labs/o1js@fc16ce3:
+    resolution: {tarball: https://pkg.pr.new/o1-labs/o1js@fc16ce3}
+    version: 1.9.0
     engines: {node: '>=18.14.0'}
     hasBin: true
 
@@ -1364,6 +1377,11 @@ snapshots:
       dotenv: 16.4.5
       o1js: 1.9.0
 
+  drm-mina-contracts@0.4.0(o1js@https://pkg.pr.new/o1-labs/o1js@fc16ce3):
+    dependencies:
+      dotenv: 16.4.5
+      o1js: https://pkg.pr.new/o1-labs/o1js@fc16ce3
+
   ecdsa-sig-formatter@1.0.11:
     dependencies:
       safe-buffer: 5.2.1
@@ -1722,6 +1740,17 @@ snapshots:
       through2: 4.0.2
 
   o1js@1.9.0:
+    dependencies:
+      blakejs: 1.2.1
+      cachedir: 2.4.0
+      isomorphic-fetch: 3.0.0
+      js-sha256: 0.9.0
+      reflect-metadata: 0.1.14
+      tslib: 2.8.0
+    transitivePeerDependencies:
+      - encoding
+
+  o1js@https://pkg.pr.new/o1-labs/o1js@fc16ce3:
     dependencies:
       blakejs: 1.2.1
       cachedir: 2.4.0

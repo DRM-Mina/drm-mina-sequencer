@@ -1,10 +1,11 @@
-import { DRM } from "drm-mina-contracts/build/src/DRM.js";
+import { DRM, offchainState } from "drm-mina-contracts/build/src/DRM.js";
 import { GameToken } from "drm-mina-contracts/build/src/GameToken.js";
 import { Mina, PublicKey } from "o1js";
 import { Game } from "./db/schemas.js";
 import dotenv from "dotenv";
 import logger from "./logger.js";
 import { DeviceSession } from "drm-mina-contracts/build/src/lib/DeviceSessionProof.js";
+import { DeviceIdentifier } from "drm-mina-contracts/build/src/lib/DeviceIdentifierProof.js";
 
 dotenv.config();
 
@@ -59,6 +60,10 @@ export async function compileContracts() {
         await GameToken.compile();
         console.timeEnd("GameToken.compile");
 
+        console.time("DeviceIdentifier compile");
+        await DeviceIdentifier.compile();
+        console.timeEnd("DeviceIdentifier compile");
+
         console.time("DeviceSession compile");
         const { verificationKey } = await DeviceSession.compile();
         console.timeEnd("DeviceSession compile");
@@ -66,6 +71,14 @@ export async function compileContracts() {
         if (!verificationKey) {
             throw new Error("Failed to compile DeviceSession");
         }
+
+        console.time("offchainState compile");
+        await offchainState.compile();
+        console.timeEnd("offchainState compile");
+
+        console.time("DRM compile");
+        await DRM.compile();
+        console.timeEnd("DRM compile");
 
         return verificationKey;
     } catch (err) {
@@ -78,6 +91,7 @@ export async function initializeContracts(gameData: GameData[], gameContracts: G
         for (let i = 0; i < gameData.length; i++) {
             const gameToken = new GameToken(PublicKey.fromBase58(gameData[i].gameTokenAddress));
             const drm = new DRM(PublicKey.fromBase58(gameData[i].drmAddress));
+            drm.offchainState.setContractInstance(drm);
 
             gameContracts.push({
                 gameTokenAddress: gameData[i].gameTokenAddress,
