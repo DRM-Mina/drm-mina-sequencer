@@ -19,7 +19,7 @@ mongoDb.once("open", function () {
 async function insertOrUpdateGames() {
     try {
         for (const game of db.games) {
-            await Game.updateOne({ gameId: game.id }, { $set: game }, { upsert: true });
+            await Game.updateOne({ gameId: game.gameId }, { $set: game }, { upsert: true });
         }
         console.log("Games have been successfully added or updated in the database");
         return;
