@@ -10,7 +10,7 @@ export function checkEnv(input: string | undefined, message: string): string {
 }
 
 export async function fetchActions(drm: DRM): Promise<number> {
-    let latest_offchain_commitment = await drm.offchainState.fetch();
+    let latest_offchain_commitment = await drm.offchainStateCommitments.fetch();
     const actionStateRange = {
         fromActionState: latest_offchain_commitment?.actionState,
     };
@@ -34,7 +34,7 @@ export async function settle({ drm, feepayerKey }: SettlementInputs) {
     const feePayer = feepayerKey.toPublicKey();
     console.time("settlement proof");
     try {
-        proof = await offchainState.createSettlementProof();
+        proof = await drm.offchainState.createSettlementProof();
     } finally {
         console.timeEnd("settlement proof");
         try {
@@ -58,7 +58,8 @@ export async function settlementCycle({ drm, feepayerKey, counter = 0, config }:
         const actions = await fetchActions(drm);
         let shouldSettle =
             actions > 0 &&
-            (actions > config.MIN_ACTIONS_TO_REDUCE || counter > config.MAX_RETRIES_BEFORE_REDUCE);
+            (actions >= config.MIN_ACTIONS_TO_REDUCE ||
+                counter >= config.MAX_RETRIES_BEFORE_REDUCE);
         if (actions === 0) {
             setTimeout(settlementCycle, config.RETRY_WAIT_MS, {
                 drm,
@@ -72,7 +73,6 @@ export async function settlementCycle({ drm, feepayerKey, counter = 0, config }:
             setTimeout(settlementCycle, config.RETRY_WAIT_MS, {
                 drm,
                 feepayerKey,
-
                 counter,
                 config,
             });
