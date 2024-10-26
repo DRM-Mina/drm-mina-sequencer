@@ -6,6 +6,7 @@ import logger from "./logger.js";
 import { connectToDatabase } from "./db/connection.js";
 
 import authRoutes from "./routes/auth.js";
+import commentsRoutes from "./routes/comments.js";
 import gameDataRoutes from "./routes/gameData.js";
 import wishlistRoutes from "./routes/wishlist.js";
 import slotNamesRoutes from "./routes/slotNames.js";
@@ -26,6 +27,7 @@ app.use(helmet());
 app.use(commonLimiter);
 
 app.use("/auth", authRoutes);
+app.use("/comments", commentsRoutes);
 app.use("/game-data", gameDataRoutes);
 app.use("/wishlist", wishlistRoutes);
 app.use("/slot-names", slotNamesRoutes);
