@@ -4,7 +4,23 @@
     "type": "module",
     "main": "app.ts",
     "watch": {
-        "build-and-start": {
+        "build-and-start:express": {
+            "patterns": [
+                "src"
+            ],
+            "extensions": [
+                "*"
+            ]
+        },
+        "build-and-start:sequencer": {
+            "patterns": [
+                "src"
+            ],
+            "extensions": [
+                "*"
+            ]
+        },
+        "build-and-start:settlement": {
             "patterns": [
                 "src"
             ],
