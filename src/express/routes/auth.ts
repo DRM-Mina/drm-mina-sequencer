@@ -5,6 +5,7 @@ import Client from "mina-signer";
 import { MINA_ADDRESS_REGEX } from "../utils/constants.js";
 
 import logger from "../logger.js";
+import { User } from "../db/schemas.js";
 
 const router: Router = express.Router();
 
@@ -55,8 +56,16 @@ router.post("/verify", async (req, res) => {
             }
 
             const token = jwt.sign({ publicKey }, process.env.JWT_SECRET, { expiresIn: "1h" });
+            const user = await User.findOne({
+                publicKey,
+            });
 
-            logger.info("Token generated " + token);
+            if (!user) {
+                await User.create({ publicKey });
+                logger.info("New user created: " + publicKey);
+            }
+
+            logger.info("User authenticated: " + publicKey);
             res.json({ message: "Authentication successful", token });
         } else {
             logger.error("Invalid signature");
