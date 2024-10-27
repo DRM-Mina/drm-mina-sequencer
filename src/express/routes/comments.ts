@@ -30,18 +30,9 @@ router.get("/:gameId", async (req, res) => {
             .skip((page - 1) * limit)
             .limit(limit);
 
-        const averageRatingResult = await Comment.aggregate([
-            { $match: { game: Number(gameId) } },
-            { $group: { _id: null, averageRating: { $avg: "$rating" } } },
-        ]);
-
-        const averageRating =
-            averageRatingResult.length > 0 ? averageRatingResult[0].averageRating : 0;
-
         logger.info("Comments fetched for game " + gameId);
         res.status(200).json({
             comments,
-            averageRating,
             totalComments,
             totalPages,
             currentPage: page,
@@ -94,6 +85,20 @@ router.post("/", authenticateToken, async (req, res) => {
 
         await newComment.save();
 
+        const averageRatingResult = await Comment.aggregate([
+            { $match: { game: Number(gameId) } },
+            { $group: { _id: null, averageRating: { $avg: "$rating" } } },
+        ]);
+
+        const averageRating =
+            averageRatingResult.length > 0 ? averageRatingResult[0].averageRating : 0;
+
+        const ratingCount = await Comment.countDocuments({ game: gameId });
+
+        game.averageRating = averageRating;
+        game.ratingCount = ratingCount;
+        await game.save();
+
         logger.info("Comment added");
         res.status(201).json({ message: "Comment added", comment: newComment });
     } catch (error) {
@@ -135,6 +140,23 @@ router.put("/:commentId", authenticateToken, async (req, res) => {
 
         await comment.save();
 
+        const gameId = comment.game;
+        const game = await Game.findOne({ gameId });
+        if (game) {
+            const averageRatingResult = await Comment.aggregate([
+                { $match: { game: Number(gameId) } },
+                { $group: { _id: null, averageRating: { $avg: "$rating" } } },
+            ]);
+
+            const averageRating =
+                averageRatingResult.length > 0 ? averageRatingResult[0].averageRating : 0;
+
+            const ratingCount = await Comment.countDocuments({ game: gameId });
+            game.averageRating = averageRating;
+            game.ratingCount = ratingCount;
+            await game.save();
+        }
+
         logger.info(`Comment ${commentId} updated`);
         res.status(200).json({ message: "Comment updated", comment });
     } catch (error) {
@@ -161,6 +183,24 @@ router.delete("/:commentId", authenticateToken, async (req, res) => {
         }
 
         await Comment.findByIdAndDelete(commentId);
+
+        const gameId = comment.game;
+        const game = await Game.findOne({ gameId });
+        if (game) {
+            const averageRatingResult = await Comment.aggregate([
+                { $match: { game: Number(gameId) } },
+                { $group: { _id: null, averageRating: { $avg: "$rating" } } },
+            ]);
+
+            const averageRating =
+                averageRatingResult.length > 0 ? averageRatingResult[0].averageRating : 0;
+
+            const ratingCount = await Comment.countDocuments({ game: gameId });
+
+            game.averageRating = averageRating;
+            game.ratingCount = ratingCount;
+            await game.save();
+        }
 
         logger.info(`Comment ${commentId} deleted`);
         res.status(200).json({ message: "Comment deleted" });
