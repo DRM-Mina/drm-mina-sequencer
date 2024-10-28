@@ -6,6 +6,8 @@ import dotenv from "dotenv";
 import logger from "./logger.js";
 import { DeviceSession } from "drm-mina-contracts/build/src/lib/DeviceSessionProof.js";
 import { DeviceIdentifier } from "drm-mina-contracts/build/src/lib/DeviceIdentifierProof.js";
+import { BundledDeviceSession } from "drm-mina-contracts/build/src/lib/BundledDeviceSessionProof.js";
+import Bundler from "./bundler.js";
 
 dotenv.config();
 
@@ -72,6 +74,25 @@ export async function compileContracts() {
             throw new Error("Failed to compile DeviceSession");
         }
 
+        console.time("BundledDeviceSession compile");
+        await BundledDeviceSession.compile();
+        console.timeEnd("BundledDeviceSession compile");
+
+        const game = await Game.findById(1);
+        if (!game || !game.gameTokenContractAddress) {
+            throw new Error("Game not found");
+        }
+        console.log(game);
+        console.time("baseProof");
+        const baseProof = await BundledDeviceSession.base(
+            PublicKey.fromBase58(game.gameTokenContractAddress)
+        );
+        console.timeEnd("baseProof");
+
+        const bundler = Bundler.getInstance();
+        console.log("Setting base proof");
+        bundler.setBaseProof(baseProof);
+
         console.time("offchainState compile");
         await offchainState.compile();
         console.timeEnd("offchainState compile");
@@ -100,6 +121,13 @@ export async function initializeContracts(gameData: GameData[], gameContracts: G
                 drm,
             });
         }
+
+        const game = gameContracts.find((g) => g.gameTokenAddress === gameData[0].gameTokenAddress);
+        if (!game || !game.gameTokenAddress) {
+            throw new Error("Game not found");
+        }
+        const bundler = Bundler.getInstance();
+        bundler.setGameToken(PublicKey.fromBase58(game?.gameTokenAddress), game.drm);
     } catch (err) {
         console.error(err);
     }

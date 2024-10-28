@@ -1,6 +1,5 @@
 import express from "express";
 import {
-    checkEnv,
     compileContracts,
     fetchGamesFromDB,
     GameContracts,
@@ -10,17 +9,12 @@ import {
 } from "./utils.js";
 import { connectToDatabase } from "./db/connection.js";
 import logger from "./logger.js";
-import { Mina, PrivateKey, VerificationKey, verify } from "o1js";
+import { VerificationKey, verify } from "o1js";
 import { DeviceSessionProof } from "drm-mina-contracts/build/src/lib/DeviceSessionProof.js";
+import Bundler from "./bundler.js";
 
 let gameContracts: GameContracts[] = [];
 let verificationKey: VerificationKey | undefined;
-
-const feePayerPrivKeyString = checkEnv(process.env.FEE_PAYER_KEY, "MISSING FEE_PAYER_KEY");
-
-const feePayerPrivKey = PrivateKey.fromBase58(feePayerPrivKeyString);
-
-const feePayerPubKey = feePayerPrivKey.toPublicKey();
 
 const port = 3334;
 
@@ -46,6 +40,7 @@ app.post("/", async (req, res) => {
 
         console.log(ok);
 
+        // Todo seperate games
         const game = gameContracts.find((g) => {
             console.log(g.gameTokenAddress, sessionProof.publicOutput.gameToken.toBase58());
             console.log(g.gameTokenAddress === sessionProof.publicOutput.gameToken.toBase58());
@@ -57,23 +52,15 @@ app.post("/", async (req, res) => {
             return res.status(400).send("Game not found");
         }
 
-        console.time("createSession tx");
-        const tx = await Mina.transaction(
-            {
-                sender: feePayerPubKey,
-                fee: 1e8,
-            },
-            async () => {
-                await game!.drm.createSession(sessionProof);
-            }
-        );
-        console.timeEnd("createSession tx");
+        const bundler = Bundler.getInstance();
 
-        tx.sign([feePayerPrivKey]);
-        await tx.prove();
-        let pendingTransaction = await tx.send();
-
-        logger.info(`Transaction sent https://minascan.io/devnet/tx/${pendingTransaction.hash}`);
+        try {
+            // Todo add rate limiting
+            bundler.addProof(sessionProof);
+        } catch (e) {
+            res.status(400).send(e);
+            return;
+        }
 
         res.status(200).send("OK");
     } catch (err) {
