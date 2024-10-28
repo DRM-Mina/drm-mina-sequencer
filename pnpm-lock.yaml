@@ -21,8 +21,8 @@ importers:
         specifier: ^16.4.5
         version: 16.4.5
       drm-mina-contracts:
-        specifier: ^0.4.0
-        version: 0.4.0(o1js@https://pkg.pr.new/o1-labs/o1js@fc16ce3)
+        specifier: ^0.4.1
+        version: 0.4.1
       express:
         specifier: ^4.19.2
         version: 4.21.1
@@ -48,8 +48,8 @@ importers:
         specifier: ^8.6.1
         version: 8.7.1
       o1js:
-        specifier: https://pkg.pr.new/o1-labs/o1js@fc16ce3
-        version: https://pkg.pr.new/o1-labs/o1js@fc16ce3
+        specifier: ^1.9.1
+        version: 1.9.1
       serve-static:
         specifier: ^1.15.0
         version: 1.16.2
@@ -457,12 +457,9 @@ packages:
     peerDependencies:
       o1js: ^1.9
 
-  drm-mina-contracts@0.4.0:
-    resolution: {integrity: sha512-J7lQrZJ11mVta6uO1Np/p06M6R+Ahu/AZGeeMkiDBtRCQsvkNUcPFouQ6G+LSFIa1h8SnWzTlBpg8xfMHQdGkw==}
-    version: 0.4.0
+  drm-mina-contracts@0.4.1:
+    resolution: {integrity: sha512-ZYPHbSwfTvH3x38mBC55Cj+kSj31QoKV2O4rjBn5sykgwc/UojY29nvg76NbAQRTOlvx09GdgR5/Hq3c4zcqdg==}
     engines: {node: '>=18.14.0'}
-    peerDependencies:
-      o1js: https://pkg.pr.new/o1-labs/o1js@fc16ce3
 
   ecdsa-sig-formatter@1.0.11:
     resolution: {integrity: sha512-nagl3RYrbNv6kQkeJIpt6NJZy8twLB/2vtz6yN9Z4vRKHN4/QZJIEbqohALSgwKdnksuY3k5Addp5lg8sVoVcQ==}
@@ -836,9 +833,8 @@ packages:
     engines: {node: '>=18.14.0'}
     hasBin: true
 
-  o1js@https://pkg.pr.new/o1-labs/o1js@fc16ce3:
-    resolution: {tarball: https://pkg.pr.new/o1-labs/o1js@fc16ce3}
-    version: 1.9.0
+  o1js@1.9.1:
+    resolution: {integrity: sha512-QbeFb2WU4YpCRIz/2hu3lhwioDntpmn8M7Zl6LrIh3fIPoHMQcN9OIqE8whN83ttcioV3HsJwszKtfkBC5vEYQ==}
     engines: {node: '>=18.14.0'}
     hasBin: true
 
@@ -1377,10 +1373,12 @@ snapshots:
       dotenv: 16.4.5
       o1js: 1.9.0
 
-  drm-mina-contracts@0.4.0(o1js@https://pkg.pr.new/o1-labs/o1js@fc16ce3):
+  drm-mina-contracts@0.4.1:
     dependencies:
       dotenv: 16.4.5
-      o1js: https://pkg.pr.new/o1-labs/o1js@fc16ce3
+      o1js: 1.9.1
+    transitivePeerDependencies:
+      - encoding
 
   ecdsa-sig-formatter@1.0.11:
     dependencies:
@@ -1750,7 +1748,7 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
-  o1js@https://pkg.pr.new/o1-labs/o1js@fc16ce3:
+  o1js@1.9.1:
     dependencies:
       blakejs: 1.2.1
       cachedir: 2.4.0
