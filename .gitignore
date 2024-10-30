@@ -4,3 +4,8 @@ logs
 .env
 
 **/test/mock.ts
+
+sessionProofs.json
+deviceIdentifierProofs.json
+
+dump.rdb
