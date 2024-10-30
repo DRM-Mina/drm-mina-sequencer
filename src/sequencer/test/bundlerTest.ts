@@ -15,6 +15,7 @@ import {
 import { BundledDeviceSession } from "drm-mina-contracts/build/src/lib/BundledDeviceSessionProof.js";
 import axios from "axios";
 import dotenv from "dotenv";
+import fs from "fs/promises";
 
 dotenv.config();
 
@@ -76,13 +77,41 @@ const initializeContracts = async () => {
     DRMInstance.offchainState.setContractInstance(DRMInstance);
 };
 
-let deviceSessionProofs: DeviceIdentifierProof[] = [];
+let deviceIdentifierProofs: DeviceIdentifierProof[] = [];
 const createDeviceIdentifierProofs = async () => {
-    for (let i = 0; i < buyerCount; i++) {
-        console.time(`Proof for device ${i}`);
-        const deviceIdentifierProof = await DeviceIdentifier.proofForDevice(deviceIdentifiers[i]);
-        deviceSessionProofs.push(deviceIdentifierProof);
-        console.timeEnd(`Proof for device ${i}`);
+    let isDeviceIdentifierProofsExist = false;
+    let deviceIdentifierProofArr = [];
+    try {
+        const deviceIdentifierProofsJson = await fs.readFile("deviceIdentifierProofs.json");
+        console.log("deviceIdentifierProofsJson read");
+        deviceIdentifierProofArr = JSON.parse(deviceIdentifierProofsJson.toString());
+        console.log("deviceIdentifierProofArr parsed, length:", deviceIdentifierProofArr.length);
+        if (deviceIdentifierProofArr.length === buyerCount) {
+            isDeviceIdentifierProofsExist = true;
+        }
+    } catch (e) {
+        isDeviceIdentifierProofsExist = false;
+    }
+    if (!isDeviceIdentifierProofsExist) {
+        for (let i = 0; i < buyerCount; i++) {
+            console.time(`Proof for device ${i}`);
+            const deviceIdentifierProof = await DeviceIdentifier.proofForDevice(
+                deviceIdentifiers[i]
+            );
+            deviceIdentifierProofs.push(deviceIdentifierProof);
+            console.timeEnd(`Proof for device ${i}`);
+        }
+        await fs.writeFile(
+            "deviceIdentifierProofs.json",
+            JSON.stringify(deviceIdentifierProofs, null, 2)
+        );
+    } else {
+        for (let i = 0; i < buyerCount; i++) {
+            const deviceIdentifierProof = await DeviceIdentifierProof.fromJSON(
+                deviceIdentifierProofArr[i]
+            );
+            deviceIdentifierProofs.push(deviceIdentifierProof);
+        }
     }
 };
 
@@ -142,7 +171,7 @@ const deviceRegistrations = async () => {
             async () => {
                 await DRMInstance.initAndAddDevice(
                     pubKeys[i],
-                    deviceSessionProofs[i],
+                    deviceIdentifierProofs[i],
                     UInt64.from(1)
                 );
             }
@@ -180,7 +209,7 @@ const deviceRegistrationsOneByOne = async () => {
             async () => {
                 await DRMInstance.initAndAddDevice(
                     pubKeys[i],
-                    deviceSessionProofs[i],
+                    deviceIdentifierProofs[i],
                     UInt64.from(1)
                 );
             }
@@ -230,22 +259,44 @@ const checkDevices = async () => {
     }
 };
 
-const sessionProofs: DeviceSessionProof[] = [];
+let sessionProofs: DeviceSessionProof[] = [];
 const createSessions = async () => {
-    for (let i = 0; i < buyerCount; i++) {
-        console.time(`Session for device ${i}`);
-        const pubInput = new DeviceSessionInput({
-            gameToken: GameTokenAddr,
-            currentSessionKey: UInt64.from(1),
-            newSessionKey: UInt64.from(20),
-        });
+    let isSessionProofsExist = false;
+    let sessionProofArr = [];
+    try {
+        const sessionProofsJson = await fs.readFile("sessionProofs.json");
+        console.log("sessionProofsJson read");
+        sessionProofArr = JSON.parse(sessionProofsJson.toString());
+        console.log("sessionProofArr parsed, length:", sessionProofArr.length);
+        if (sessionProofArr.length === buyerCount) {
+            isSessionProofsExist = true;
+        }
+    } catch (e) {
+        isSessionProofsExist = false;
+    }
 
-        const sessionProof = await DeviceSession.proofForSession(pubInput, deviceIdentifiers[i]);
-        sessionProofs.push(sessionProof);
-        console.timeEnd(`Session for device ${i}`);
-        console.log(
-            `${sessionProof.publicOutput.gameToken.toBase58()}, ${sessionProof.publicOutput.currentSessionKey.toString()}, ${sessionProof.publicOutput.newSessionKey.toString()}`
-        );
+    if (!isSessionProofsExist) {
+        for (let i = 0; i < buyerCount; i++) {
+            console.time(`Session for device ${i}`);
+            const pubInput = new DeviceSessionInput({
+                gameToken: GameTokenAddr,
+                currentSessionKey: UInt64.from(1),
+                newSessionKey: UInt64.from(20),
+            });
+
+            const sessionProof = await DeviceSession.proofForSession(
+                pubInput,
+                deviceIdentifiers[i]
+            );
+            sessionProofs.push(sessionProof);
+            console.timeEnd(`Session for device ${i}`);
+        }
+        await fs.writeFile("sessionProofs.json", JSON.stringify(sessionProofs, null, 2));
+    } else {
+        for (let i = 0; i < buyerCount; i++) {
+            const sessionProof = await DeviceSessionProof.fromJSON(sessionProofArr[i]);
+            sessionProofs.push(sessionProof);
+        }
     }
 };
 
