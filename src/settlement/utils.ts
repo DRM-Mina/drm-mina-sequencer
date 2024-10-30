@@ -1,4 +1,4 @@
-import { DRM, offchainState, StateProof } from "drm-mina-contracts";
+import { DRM, StateProof } from "drm-mina-contracts";
 import { Mina } from "o1js";
 import { CycleConfig, SettlementInputs } from "./types.js";
 
