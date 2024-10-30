@@ -1,11 +1,11 @@
-import { DeviceSessionProof, DRM } from "drm-mina-contracts";
 import {
     BundledDeviceSession,
     BundledDeviceSessionProof,
-} from "drm-mina-contracts/build/src/lib/BundledDeviceSessionProof";
+} from "drm-mina-contracts/build/src/lib/BundledDeviceSessionProof.js";
 import { Mina, PrivateKey, PublicKey } from "o1js";
-import { checkEnv } from "./utils";
-import logger from "./logger";
+import { checkEnv } from "./utils.js";
+import { DRM } from "drm-mina-contracts/build/src/DRM.js";
+import { DeviceSessionProof } from "drm-mina-contracts/build/src/lib/DeviceSessionProof.js";
 
 export default class Bundler {
     private static instance: Bundler;
@@ -19,6 +19,7 @@ export default class Bundler {
     private checkInterval: NodeJS.Timeout;
     private feePayerPubKey: PublicKey;
     private feePayerPrivKey: PrivateKey;
+    private isBundleInProgress: boolean;
 
     private constructor() {
         this.proofQueue = [];
@@ -30,6 +31,7 @@ export default class Bundler {
         const feePayerPrivKeyString = checkEnv(process.env.FEE_PAYER_KEY, "MISSING FEE_PAYER_KEY");
         this.feePayerPrivKey = PrivateKey.fromBase58(feePayerPrivKeyString);
         this.feePayerPubKey = this.feePayerPrivKey.toPublicKey();
+        this.isBundleInProgress = false;
     }
 
     public static getInstance(): Bundler {
@@ -41,10 +43,14 @@ export default class Bundler {
 
     private async checkBundle(): Promise<void> {
         const currentTime = Date.now();
+        console.log(
+            `Checking bundle: ${this.currentBundledCount} proofs in bundle, ${this.proofQueue.length} in queue`
+        );
 
         if (
             this.bundleStartTime &&
             this.currentBundledCount > 0 &&
+            !this.isBundleInProgress &&
             currentTime - this.bundleStartTime >= 3 * 60 * 1000 // 3 min
         ) {
             await this.sendBundle();
@@ -60,17 +66,20 @@ export default class Bundler {
         this.drmInstance = drmInstance;
     }
 
-    public addProof(proof: DeviceSessionProof): void {
-        for (const p of this.proofQueue) {
-            if (p.publicOutput.hash.toBigInt() === proof.publicOutput.hash.toBigInt()) {
-                throw new Error("Proof for this device already in queue");
-            }
-        }
+    public async addProof(jsonProof: string): Promise<void> {
+        const proof = await DeviceSessionProof.fromJSON(JSON.parse(jsonProof));
         this.proofQueue.push(proof);
+        console.log(`Proof added to queue: ${this.proofQueue.length} proofs in queue`);
+
+        if (!this.isBundleInProgress) {
+            this.isBundleInProgress = true;
+            await this.bundleProof();
+        }
     }
 
     public async bundleProof(): Promise<void> {
         while (this.proofQueue.length > 0 && this.currentBundledCount < 4) {
+            console.log(`Bundling proof: ${this.currentBundledCount + 1}`);
             const proof = this.proofQueue.shift();
 
             if (!proof) {
@@ -94,11 +103,18 @@ export default class Bundler {
                 throw new Error("Current bundled proof not set");
             }
 
+            console.log(
+                `Current bundled proof: ${this.currentBundledProof.publicOutput.deviceCount} devices`
+            );
+            console.log(
+                `Proof to append: ${proof.publicOutput.gameToken.toBase58()}, ${proof.publicOutput.currentSessionKey.toString()}, ${proof.publicOutput.newSessionKey.toString()}`
+            );
             this.currentBundledProof = await BundledDeviceSession.appendToBundle(
                 this.gameTokenPubKey,
                 proof,
                 this.currentBundledProof
             );
+            console.log(`Proof appended to bundle: ${this.currentBundledCount + 1}`);
 
             this.currentBundledCount++;
         }
@@ -106,6 +122,7 @@ export default class Bundler {
         if (this.currentBundledCount >= 4) {
             await this.sendBundle();
         }
+        this.isBundleInProgress = false;
     }
 
     private async sendBundle(): Promise<void> {
@@ -113,7 +130,19 @@ export default class Bundler {
             throw new Error("Current bundled proof not set");
         }
 
-        console.log("Sending bundle");
+        if (!this.feePayerPubKey) {
+            throw new Error("Fee payer public key not set");
+        }
+
+        if (!this.feePayerPrivKey) {
+            throw new Error("Fee payer private key not set");
+        }
+
+        if (!this.drmInstance) {
+            throw new Error("DRM instance not set");
+        }
+
+        console.log(`Sending bundle: ${this.currentBundledCount} proofs`);
 
         const bundleTx = Mina.transaction(
             {
@@ -121,14 +150,14 @@ export default class Bundler {
                 fee: 1e8,
             },
             async () => {
-                this.drmInstance?.submitBudledDeviceSessionProof(this.currentBundledProof!);
+                await this.drmInstance!.submitBudledDeviceSessionProof(this.currentBundledProof!);
             }
         );
 
         await bundleTx.prove();
         const pendingTx = await bundleTx.sign([this.feePayerPrivKey]).send();
-        logger.info(`Bundle sent: https://minascan.io/devnet/tx/${pendingTx.hash}`);
-        logger.info(
+        console.log(`Bundle sent: https://minascan.io/devnet/tx/${pendingTx.hash}`);
+        console.log(
             `Bundle count: ${this.currentBundledCount}, time: ${
                 (Date.now() - this.bundleStartTime!) / 1000
             }s`
