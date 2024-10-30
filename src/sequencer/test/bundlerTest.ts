@@ -313,15 +313,30 @@ const submitSessions = async () => {
     }
 };
 
+const checkSessions = async () => {
+    await fetchAccount({
+        publicKey: DRMAddr,
+    });
+    for (let i = 0; i < buyerCount; i++) {
+        const session = (
+            await DRMInstance.offchainState.fields.sessions.get(deviceIdentifiers[i].hash())
+        ).value.toString();
+        console.log(`buyer ${i} session: ${session}`);
+    }
+};
+
 const main = async () => {
     await initializeContracts();
     // await buyGames();
     // await createDeviceIdentifierProofs();
     // await deviceRegistrationsOneByOne();
     // await settle();
-    await checkDevices();
-    await createSessions();
-    await submitSessions();
+    // await checkSessions();
+    // await checkDevices();
+    // await createSessions();
+    // await submitSessions();
+    // await settle();
+    await checkSessions();
 };
 
 main();
