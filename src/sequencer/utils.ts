@@ -78,16 +78,15 @@ export async function compileContracts() {
         await BundledDeviceSession.compile();
         console.timeEnd("BundledDeviceSession compile");
 
-        const game = await Game.findById(1);
-        if (!game || !game.gameTokenContractAddress) {
-            throw new Error("Game not found");
-        }
-        console.log(game);
         console.time("baseProof");
         const baseProof = await BundledDeviceSession.base(
-            PublicKey.fromBase58(game.gameTokenContractAddress)
+            PublicKey.fromBase58(process.env.GAME_TOKEN_ADDR3!)
         );
         console.timeEnd("baseProof");
+
+        console.log(
+            `Base proof: ${baseProof.publicOutput.deviceCount.toString()}, ${baseProof.publicInput.toBase58()}`
+        );
 
         const bundler = Bundler.getInstance();
         console.log("Setting base proof");
@@ -122,12 +121,9 @@ export async function initializeContracts(gameData: GameData[], gameContracts: G
             });
         }
 
-        const game = gameContracts.find((g) => g.gameTokenAddress === gameData[0].gameTokenAddress);
-        if (!game || !game.gameTokenAddress) {
-            throw new Error("Game not found");
-        }
-        const bundler = Bundler.getInstance();
-        bundler.setGameToken(PublicKey.fromBase58(game?.gameTokenAddress), game.drm);
+        // const bundler = Bundler.getInstance();
+        // const drm = new DRM(PublicKey.fromBase58(process.env.DRM_ADDR3!));
+        // bundler.setGameToken(PublicKey.fromBase58(process.env.GAME_TOKEN_ADDR3!), drm);
     } catch (err) {
         console.error(err);
     }
