@@ -1,17 +1,18 @@
 import express, { Router } from "express";
-import axios from "axios";
 import logger from "../logger.js";
 import {
     DeviceSession,
     DeviceSessionProof,
 } from "drm-mina-contracts/build/src/lib/DeviceSessionProof.js";
 import { VerificationKey, verify } from "o1js";
+import { Queue } from "bullmq";
 
 const router: Router = express.Router();
 
 let verificationKey: VerificationKey;
 
-const sequencerUrl = "http://localhost:3334";
+const proofQueue = new Queue("proofQueue");
+await proofQueue.setGlobalConcurrency(1);
 
 router.post("/", async (req, res) => {
     try {
@@ -27,8 +28,6 @@ router.post("/", async (req, res) => {
             return;
         }
 
-        logger.info("Session received from ip:", req.ip);
-
         const sessionProof = await DeviceSessionProof.fromJSON(JSON.parse(proof));
 
         const ok = await verify(sessionProof, verificationKey);
@@ -42,18 +41,25 @@ router.post("/", async (req, res) => {
             logger.info("Proof verified");
         }
 
-        logger.info("Sending session to sequencer");
-        const response = await axios.post(`${sequencerUrl}/`, {
-            proof: proof,
-        });
+        await proofQueue.add(
+            "addProof",
+            { proof },
+            {
+                removeOnComplete: {
+                    age: 600, // 10 minutes
+                    count: 10,
+                },
+                removeOnFail: {
+                    age: 600, // 10 minutes
+                    count: 10,
+                },
+            }
+        );
+        console.log("added proof to queue");
 
-        if (response.status === 200) {
-            res.status(200).send({ message: "Session submitted and verified by sequencer" });
-        } else {
-            res.status(400).send({ message: "Sequencer rejected the session" });
-        }
+        res.status(200).send({ message: "Proof submitted" });
     } catch (err) {
-        logger.error(err);
+        logger.error("Failed to process request");
         res.status(500).send({ message: "Error submitting session" });
     }
 });
