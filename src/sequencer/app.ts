@@ -5,9 +5,14 @@ import { DRM } from "drm-mina-contracts/build/src/DRM.js";
 import { PublicKey } from "o1js";
 import IORedis from "ioredis";
 
+const redisHost = process.env.REDIS_HOST || "localhost";
+const redisPort = process.env.REDIS_PORT || "6379";
+
+console.log("Connecting to Redis at", redisHost, redisPort);
+
 const connection = new IORedis({
-    host: "localhost",
-    port: 6379,
+    host: redisHost,
+    port: parseInt(redisPort),
     maxRetriesPerRequest: null,
 });
 
@@ -30,19 +35,22 @@ async function initializeWorker() {
     const worker = new Worker(
         "proofQueue",
         async (job) => {
-            if (job.name === "addProof") {
-                const { proof } = job.data;
-                try {
-                    await bundler.addProof(proof);
-                } catch (err) {
-                    console.error("Error processing proof:", err);
-                    throw err;
-                }
+            console.log(`Processing job ${job.id}`);
+            console.log("job name:", job.name);
+            const { proof } = job.data;
+            try {
+                await bundler.addProof(proof);
+            } catch (err) {
+                console.error("Error processing proof:", err);
+                throw err;
+            } finally {
+                console.log(`Proof ${job.id} processed`);
             }
         },
         {
             connection,
             concurrency: 1,
+            lockDuration: 60000, // 1 minute
         }
     );
 
@@ -58,7 +66,7 @@ async function initializeWorker() {
         console.error("Worker error:", err);
     });
 
-    console.log("Worker is running");
+    console.log("Worker is listening for jobs");
 }
 
 initializeWorker().catch((err) => {

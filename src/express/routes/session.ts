@@ -6,12 +6,26 @@ import {
 } from "drm-mina-contracts/build/src/lib/DeviceSessionProof.js";
 import { VerificationKey, verify } from "o1js";
 import { Queue } from "bullmq";
+import IORedis from "ioredis";
+
+const redisHost = process.env.REDIS_HOST || "localhost";
+const redisPort = process.env.REDIS_PORT || "6379";
+
+console.log("Connecting to Redis at", redisHost, redisPort);
+
+const connection = new IORedis({
+    host: redisHost,
+    port: parseInt(redisPort),
+    maxRetriesPerRequest: null,
+});
 
 const router: Router = express.Router();
 
 let verificationKey: VerificationKey;
 
-const proofQueue = new Queue("proofQueue");
+const proofQueue = new Queue("proofQueue", {
+    connection: connection,
+});
 await proofQueue.setGlobalConcurrency(1);
 
 router.post("/", async (req, res) => {
@@ -46,11 +60,11 @@ router.post("/", async (req, res) => {
             { proof },
             {
                 removeOnComplete: {
-                    age: 600, // 10 minutes
+                    age: 300, // 5 minutes
                     count: 10,
                 },
                 removeOnFail: {
-                    age: 600, // 10 minutes
+                    age: 300, // 5 minutes
                     count: 10,
                 },
             }
