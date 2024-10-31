@@ -9,3 +9,5 @@ sessionProofs.json
 deviceIdentifierProofs.json
 
 dump.rdb
+
+.DS_Store
