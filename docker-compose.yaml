@@ -1,0 +1,56 @@
+services:
+    express:
+        container_name: drm-mina-express
+        build:
+            context: ./
+            dockerfile: ./docker/express/Dockerfile
+        ports:
+            - "3333:3333"
+        depends_on:
+            - sequencer
+            - redis
+        environment:
+            - REDIS_HOST=redis
+            - REDIS_PORT=6379
+        networks:
+            - app-network
+
+    sequencer:
+        container_name: drm-mina-sequencer
+        build:
+            context: ./
+            dockerfile: ./docker/sequencer/Dockerfile
+        depends_on:
+            - redis
+        environment:
+            - REDIS_HOST=redis
+            - REDIS_PORT=6379
+        networks:
+            - app-network
+
+    settlement:
+        container_name: drm-mina-settlement
+        build:
+            context: ./
+            dockerfile: ./docker/settlement/Dockerfile
+
+    redis:
+        image: "redis:7.2.6-alpine"
+        container_name: drm-mina-redis
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD", "redis-cli", "ping"]
+        ports:
+            - "6379:6379"
+        volumes:
+            # - redis-data:/data
+            - ./data/redis:/data
+        networks:
+            - app-network
+
+# volumes:
+#     redis-data:
+
+networks:
+    app-network:
+        driver: bridge
