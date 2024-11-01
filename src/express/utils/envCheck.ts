@@ -43,8 +43,4 @@ export async function envCheck() {
     if (!process.env.ARCHIVE_ENDPOINT) {
         throw new Error("ARCHIVE_ENDPOINT environment variable is not defined");
     }
-
-    if (!process.env.FEE_PAYER_KEY) {
-        throw new Error("FEE_PAYER_KEY environment variable is not defined");
-    }
 }

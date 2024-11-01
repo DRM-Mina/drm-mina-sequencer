@@ -1,4 +1,4 @@
-import { Mina, PrivateKey, PublicKey } from "o1js";
+import { fetchAccount, Mina, PrivateKey, PublicKey } from "o1js";
 import { DRM, offchainState, StateProof } from "drm-mina-contracts/build/src/DRM.js";
 import { GameToken } from "drm-mina-contracts/build/src/GameToken.js";
 import { DeviceIdentifier } from "drm-mina-contracts/build/src/lib/DeviceIdentifierProof.js";
@@ -45,11 +45,9 @@ export async function fetchActions(drm: DRM): Promise<number> {
     return actions;
 }
 
-export async function settle(drm: DRM): Promise<void> {
+export async function settle(drm: DRM, feepayerKey: PrivateKey, nonce: number): Promise<void> {
     let proof: StateProof;
-    const feepayerKey = PrivateKey.fromBase58(
-        checkEnv(process.env.FEE_PAYER_KEY, "MISSING FEE_PAYER_KEY")
-    );
+
     const feePayer = feepayerKey.toPublicKey();
     console.time("settlement proof");
     try {
@@ -61,6 +59,7 @@ export async function settle(drm: DRM): Promise<void> {
                 {
                     sender: feePayer,
                     fee: 1e8,
+                    nonce: nonce,
                 },
                 async () => {
                     await drm.settle(proof);
@@ -135,4 +134,12 @@ export function getDRMInstances() {
             startTime: 0,
         },
     ];
+}
+
+export async function getNonce(feepayerKey: PrivateKey) {
+    const pubkey = feepayerKey.toPublicKey();
+    await fetchAccount({ publicKey: pubkey });
+
+    const account = Mina.getAccount(pubkey);
+    return Number(account.nonce.toBigint());
 }

@@ -28,7 +28,10 @@ export default class Bundler {
         this.gameTokenPubKey = undefined;
         this.checkInterval = setInterval(() => this.checkBundle(), 60000);
 
-        const feePayerPrivKeyString = checkEnv(process.env.FEE_PAYER_KEY, "MISSING FEE_PAYER_KEY");
+        const feePayerPrivKeyString = checkEnv(
+            process.env.SEQUENCER_FEE_PAYER_KEY,
+            "MISSING SEQUENCER_FEE_PAYER_KEY"
+        );
         this.feePayerPrivKey = PrivateKey.fromBase58(feePayerPrivKeyString);
         this.feePayerPubKey = this.feePayerPrivKey.toPublicKey();
         this.isBundleInProgress = false;
