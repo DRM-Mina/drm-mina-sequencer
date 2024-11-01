@@ -25,7 +25,6 @@ let feepayerNonce = await getNonce(feepayerKey);
 
 async function settlementCycle() {
     for (let i = 0; i < instances.length; i++) {
-        logger.info("Checking actions for", instances[i].contractAddress);
         const actions = await fetchActions(instances[i].contract);
         logger.info(`${actions} actions pending for ${instances[i].contractAddress}`);
         logger.info(
