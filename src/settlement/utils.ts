@@ -1,12 +1,28 @@
-import { DRM, StateProof } from "drm-mina-contracts";
-import { Mina } from "o1js";
-import { CycleConfig, SettlementInputs } from "./types.js";
+import { Mina, PrivateKey, PublicKey } from "o1js";
+import { DRM, offchainState, StateProof } from "drm-mina-contracts/build/src/DRM.js";
+import { GameToken } from "drm-mina-contracts/build/src/GameToken.js";
+import { DeviceIdentifier } from "drm-mina-contracts/build/src/lib/DeviceIdentifierProof.js";
+import { DeviceSession } from "drm-mina-contracts/build/src/lib/DeviceSessionProof.js";
+import { BundledDeviceSession } from "drm-mina-contracts/build/src/lib/BundledDeviceSessionProof.js";
+import dotenv from "dotenv";
+dotenv.config();
 
 export function checkEnv(input: string | undefined, message: string): string {
     if (input === undefined) {
         throw new Error(message);
     }
     return input;
+}
+
+export function initializeMinaInstance() {
+    const minaEndpoint = checkEnv(process.env.MINA_ENDPOINT, "MISSING MINA_ENDPOINT");
+    const archiveEndpoint = checkEnv(process.env.ARCHIVE_ENDPOINT, "MISSING ARCHIVE_ENDPOINT");
+
+    const Network = Mina.Network({
+        mina: minaEndpoint,
+        archive: archiveEndpoint,
+    });
+    Mina.setActiveInstance(Network);
 }
 
 export async function fetchActions(drm: DRM): Promise<number> {
@@ -29,8 +45,11 @@ export async function fetchActions(drm: DRM): Promise<number> {
     return actions;
 }
 
-export async function settle({ drm, feepayerKey }: SettlementInputs) {
+export async function settle(drm: DRM): Promise<void> {
     let proof: StateProof;
+    const feepayerKey = PrivateKey.fromBase58(
+        checkEnv(process.env.FEE_PAYER_KEY, "MISSING FEE_PAYER_KEY")
+    );
     const feePayer = feepayerKey.toPublicKey();
     console.time("settlement proof");
     try {
@@ -38,9 +57,15 @@ export async function settle({ drm, feepayerKey }: SettlementInputs) {
     } finally {
         console.timeEnd("settlement proof");
         try {
-            let tx = await Mina.transaction(feePayer, async () => {
-                await drm.settle(proof);
-            });
+            let tx = await Mina.transaction(
+                {
+                    sender: feePayer,
+                    fee: 1e8,
+                },
+                async () => {
+                    await drm.settle(proof);
+                }
+            );
             await tx.prove();
             const sentTx = await tx.sign([feepayerKey]).send();
             console.log(sentTx.toPretty());
@@ -48,50 +73,66 @@ export async function settle({ drm, feepayerKey }: SettlementInputs) {
                 console.log(`https://minascan.io/devnet/tx/${sentTx.hash}?type=zk-tx`);
             }
         } catch (error) {
-            console.log(error);
+            throw new Error(`${error}`);
         }
     }
 }
 
-export async function settlementCycle({ drm, feepayerKey, counter = 0, config }: CycleConfig) {
+export async function compileContracts() {
     try {
-        const actions = await fetchActions(drm);
-        let shouldSettle =
-            actions > 0 &&
-            (actions >= config.MIN_ACTIONS_TO_REDUCE ||
-                counter >= config.MAX_RETRIES_BEFORE_REDUCE);
-        if (actions === 0) {
-            setTimeout(settlementCycle, config.RETRY_WAIT_MS, {
-                drm,
-                feepayerKey,
-                counter,
-                config,
-            });
-        } else if (shouldSettle) {
-            await settle({ drm, feepayerKey });
-            counter = 0;
-            setTimeout(settlementCycle, config.RETRY_WAIT_MS, {
-                drm,
-                feepayerKey,
-                counter,
-                config,
-            });
-        } else {
-            counter++;
-            setTimeout(settlementCycle, config.RETRY_WAIT_MS, {
-                drm,
-                feepayerKey,
-                counter,
-                config,
-            });
-        }
-    } catch (error) {
-        console.log(error);
-        setTimeout(settlementCycle, config.RETRY_WAIT_MS, {
-            drm,
-            feepayerKey,
-            counter,
-            config,
-        });
+        console.time("GameToken.compile");
+        await GameToken.compile();
+        console.timeEnd("GameToken.compile");
+
+        console.time("DeviceIdentifier compile");
+        await DeviceIdentifier.compile();
+        console.timeEnd("DeviceIdentifier compile");
+
+        console.time("DeviceSession compile");
+        await DeviceSession.compile();
+        console.timeEnd("DeviceSession compile");
+
+        console.time("BundledDeviceSession compile");
+        await BundledDeviceSession.compile();
+        console.timeEnd("BundledDeviceSession compile");
+
+        console.time("offchainState compile");
+        await offchainState.compile();
+        console.timeEnd("offchainState compile");
+
+        console.time("DRM compile");
+        await DRM.compile();
+        console.timeEnd("DRM compile");
+    } catch (err) {
+        console.error(err);
     }
+}
+
+export function getDRMInstances() {
+    const drm1 = new DRM(PublicKey.fromBase58(process.env.DRM_ADDR1!));
+    drm1.offchainState.setContractInstance(drm1);
+
+    const drm2 = new DRM(PublicKey.fromBase58(process.env.DRM_ADDR2!));
+    drm2.offchainState.setContractInstance(drm2);
+
+    const drm3 = new DRM(PublicKey.fromBase58(process.env.DRM_ADDR3!));
+    drm3.offchainState.setContractInstance(drm3);
+
+    return [
+        {
+            contract: drm1,
+            contractAddress: process.env.DRM_ADDR1!,
+            startTime: 0,
+        },
+        {
+            contract: drm2,
+            contractAddress: process.env.DRM_ADDR2!,
+            startTime: 0,
+        },
+        {
+            contract: drm3,
+            contractAddress: process.env.DRM_ADDR3!,
+            startTime: 0,
+        },
+    ];
 }

@@ -1,42 +1,49 @@
-import dotenv from "dotenv";
-import { checkEnv, settlementCycle } from "./utils.js";
-import { Mina, PrivateKey } from "o1js";
-import { CycleConfig, SettlementConfig } from "./types.js";
-import { DRM, offchainState } from "drm-mina-contracts/build/src/DRM.js";
+import logger from "./logger.js";
+import {
+    compileContracts,
+    fetchActions,
+    getDRMInstances,
+    initializeMinaInstance,
+    settle,
+} from "./utils.js";
 
-dotenv.config();
+const MIN_ACTIONS_TO_REDUCE = 10;
+const MAX_WAIT_MS = 1000 * 60 * 5; // 5 minutes
 
-const minaEndpoint = checkEnv(process.env.MINA_ENDPOINT, "MISSING MINA_ENDPOINT");
-const archiveEndpoint = checkEnv(process.env.ARCHIVE_ENDPOINT, "MISSING ARCHIVE_ENDPOINT");
+initializeMinaInstance();
+await compileContracts();
 
-const feepayerKey = PrivateKey.fromBase58(
-    checkEnv(process.env.FEE_PAYER_KEY, "MISSING FEE_PAYER_KEY")
-);
+const instances = getDRMInstances();
 
-const RETRY_WAIT_MS = Number(process.env.RETRY_WAIT_MS) || 60_000;
-const MIN_ACTIONS_TO_REDUCE = Number(process.env.MIN_ACTIONS_TO_REDUCE) || 6;
-const MAX_RETRIES_BEFORE_REDUCE = Number(process.env.MAX_RETRIES_BEFORE_REDUCE) || 100;
+async function settlementCycle() {
+    for (let i = 0; i < instances.length; i++) {
+        logger.info("Checking actions for", instances[i].contractAddress);
+        const actions = await fetchActions(instances[i].contract);
+        logger.info(`${actions} actions pending for ${instances[i].contractAddress}`);
+        logger.info(
+            "Since last settlement:",
+            (Date.now() - instances[i].startTime) / 1000,
+            "seconds"
+        );
+        let shouldSettle =
+            actions > 0 &&
+            (actions >= MIN_ACTIONS_TO_REDUCE || instances[i].startTime + MAX_WAIT_MS < Date.now());
 
-const config: SettlementConfig = {
-    RETRY_WAIT_MS,
-    MIN_ACTIONS_TO_REDUCE,
-    MAX_RETRIES_BEFORE_REDUCE,
-};
+        if (shouldSettle) {
+            try {
+                logger.info(`Settling actions for ${instances[i].contractAddress}`);
+                await settle(instances[i].contract);
+                instances[i].startTime = Date.now();
+                logger.info(`Settled actions for ${instances[i].contractAddress}`);
+            } catch (err) {
+                logger.error("Error settling actions:", err);
+            }
+        } else if (actions === 0) {
+            instances[i].startTime = Date.now();
+        }
+    }
 
-const settlementCycleConfig: CycleConfig = {
-    drm: DRM,
-    feepayerKey: feepayerKey,
-    counter: 0,
-    config: config,
-};
+    setTimeout(settlementCycle, 1000 * 60 * 1); // 1 minute
+}
 
-const Network = Mina.Network({
-    mina: minaEndpoint,
-    archive: archiveEndpoint,
-});
-Mina.setActiveInstance(Network);
-
-await offchainState.compile();
-await DRM.compile();
-
-await settlementCycle(settlementCycleConfig);
+settlementCycle();

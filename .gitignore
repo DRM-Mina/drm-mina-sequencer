@@ -5,8 +5,7 @@ logs
 
 **/test/mock.ts
 
-sessionProofs.json
-deviceIdentifierProofs.json
+cachedProofs
 
 dump.rdb
 

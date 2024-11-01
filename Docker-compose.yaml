@@ -28,6 +28,12 @@ services:
         networks:
             - app-network
 
+    settlement:
+        container_name: drm-mina-settlement
+        build:
+            context: ./
+            dockerfile: ./docker/settlement/Dockerfile
+
     redis:
         image: "redis:7.2.6-alpine"
         container_name: drm-mina-redis
