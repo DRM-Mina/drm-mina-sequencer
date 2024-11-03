@@ -45,6 +45,8 @@ services:
         volumes:
             # - redis-data:/data
             - ./data/redis:/data
+            - ./redis.conf:redis.conf
+        command: ["redis-server", "redis.conf"]
         networks:
             - app-network
 
