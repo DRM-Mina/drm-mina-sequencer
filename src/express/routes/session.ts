@@ -16,7 +16,7 @@ console.log("Connecting to Redis at", redisHost, redisPort);
 const connection = new IORedis({
     host: redisHost,
     port: parseInt(redisPort),
-    password: process.env.REDIS_PASSWORD,
+    password: process.env.REDIS_PASSWRD,
     maxRetriesPerRequest: null,
 });
 
