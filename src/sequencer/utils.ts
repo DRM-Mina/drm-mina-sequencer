@@ -166,3 +166,7 @@ export async function updateGamePrices(gameContracts: GameContracts[]) {
         logger.info(`Game ${games[i].gameId} price updated to ${games[i].price}`);
     }
 }
+
+export function prettierAddress(address: string): string {
+    return `${address.slice(0, 4)}...${address.slice(-6)}`;
+}

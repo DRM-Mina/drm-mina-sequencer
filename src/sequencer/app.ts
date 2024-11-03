@@ -4,6 +4,7 @@ import { initializeMinaInstance, compileContracts } from "./utils.js";
 import { DRM } from "drm-mina-contracts/build/src/DRM.js";
 import { PublicKey } from "o1js";
 import IORedis from "ioredis";
+import logger from "./logger.js";
 
 const redisHost = process.env.REDIS_HOST || "localhost";
 const redisPort = process.env.REDIS_PORT || "6379";
@@ -40,11 +41,10 @@ async function initializeWorker() {
             const { proof } = job.data;
             try {
                 await bundler.addProof(proof);
+                logger.info(`Proof ${job.id} added to bundler`);
             } catch (err) {
-                console.error("Error processing proof:", err);
+                logger.error(`Failed to add proof ${job.id} to bundler: ${err}`);
                 throw err;
-            } finally {
-                console.log(`Proof ${job.id} processed`);
             }
         },
         {
