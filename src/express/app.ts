@@ -25,6 +25,8 @@ app.use(cors());
 app.use(express.json());
 app.use(serveStatic("public"));
 app.use(helmet());
+
+app.set("trust proxy", 1);
 app.use(commonLimiter);
 
 app.use("/auth", authRoutes);
