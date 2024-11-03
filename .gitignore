@@ -10,3 +10,4 @@ cachedProofs
 dump.rdb
 
 .DS_Store
+redis.conf
