@@ -6,7 +6,7 @@ import { PublicKey } from "o1js";
 import IORedis from "ioredis";
 import logger from "./logger.js";
 
-const redisHost = process.env.REDIS_HOST || "localhost";
+const redisHost = process.env.REDIS_HOST || "redis";
 const redisPort = process.env.REDIS_PORT || "6379";
 
 console.log("Connecting to Redis at", redisHost, redisPort);

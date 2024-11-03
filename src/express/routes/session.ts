@@ -8,7 +8,7 @@ import { VerificationKey, verify } from "o1js";
 import { Queue } from "bullmq";
 import IORedis from "ioredis";
 
-const redisHost = process.env.REDIS_HOST || "localhost";
+const redisHost = process.env.REDIS_HOST || "redis";
 const redisPort = process.env.REDIS_PORT || "6379";
 
 console.log("Connecting to Redis at", redisHost, redisPort);
@@ -73,7 +73,7 @@ router.post("/", async (req, res) => {
 
         res.status(200).send({ message: "Proof submitted" });
     } catch (err) {
-        logger.error("Failed to process request");
+        logger.error(`Error submitting session: ${err}`);
         res.status(500).send({ message: "Error submitting session" });
     }
 });
