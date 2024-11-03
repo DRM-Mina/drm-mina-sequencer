@@ -67,7 +67,6 @@ export async function settle(drm: DRM, feepayerKey: PrivateKey, nonce: number): 
             );
             await tx.prove();
             const sentTx = await tx.sign([feepayerKey]).send();
-            console.log(sentTx.toPretty());
             if (sentTx.status === "pending") {
                 console.log(`https://minascan.io/devnet/tx/${sentTx.hash}?type=zk-tx`);
             }

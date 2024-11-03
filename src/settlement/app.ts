@@ -40,12 +40,11 @@ async function settlementCycle() {
             try {
                 logger.info(`Settling actions for ${instances[i].contractAddress}`);
                 await settle(instances[i].contract, feepayerKey, feepayerNonce);
-            } catch (err) {
-                logger.error("Error settling actions:", err);
-            } finally {
                 instances[i].startTime = Date.now();
                 logger.info(`Settled actions for ${instances[i].contractAddress}`);
                 feepayerNonce++;
+            } catch (err) {
+                logger.error("Error settling actions:", err);
             }
         } else if (actions === 0) {
             instances[i].startTime = Date.now();
