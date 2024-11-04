@@ -1,5 +1,5 @@
 import express from "express";
-import cors from "cors";
+import cors, { CorsOptions } from "cors";
 import helmet from "helmet";
 import serveStatic from "serve-static";
 import logger from "./logger.js";
@@ -21,10 +21,22 @@ envCheck();
 const app = express();
 const port = 3333;
 
-app.use(cors());
+const corsOptions: CorsOptions = {
+    origin: "https://drm-mina.kadircan.org",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(serveStatic("public"));
-app.use(helmet());
+app.use(
+    helmet({
+        contentSecurityPolicy: false,
+        crossOriginEmbedderPolicy: false,
+        crossOriginResourcePolicy: { policy: "cross-origin" },
+    })
+);
 
 app.set("trust proxy", 1);
 app.use(commonLimiter);
