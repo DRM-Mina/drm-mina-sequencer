@@ -10,4 +10,4 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
 EXPOSE 3333
 
-CMD ["pnpm", "prod:sequencer"]
+CMD ["pnpm", "build-and-start:sequencer"]
