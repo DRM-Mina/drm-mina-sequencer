@@ -22,8 +22,8 @@ const app = express();
 const port = 3333;
 
 const corsOptions: CorsOptions = {
-    origin: "https://drm-mina.kadircan.org",
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    origin: "*", // Allow all origins
+    methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
 };
 
