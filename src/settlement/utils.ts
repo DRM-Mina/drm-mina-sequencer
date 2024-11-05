@@ -49,30 +49,36 @@ export async function settle(drm: DRM, feepayerKey: PrivateKey, nonce: number): 
     let proof: StateProof;
 
     const feePayer = feepayerKey.toPublicKey();
-    console.time("settlement proof");
+
     try {
+        console.time("settlement proof created");
         proof = await drm.offchainState.createSettlementProof();
-    } finally {
-        console.timeEnd("settlement proof");
-        try {
-            let tx = await Mina.transaction(
-                {
-                    sender: feePayer,
-                    fee: 1e8,
-                    nonce: nonce,
-                },
-                async () => {
-                    await drm.settle(proof);
-                }
-            );
-            await tx.prove();
-            const sentTx = await tx.sign([feepayerKey]).send();
-            if (sentTx.status === "pending") {
-                console.log(`https://minascan.io/devnet/tx/${sentTx.hash}?type=zk-tx`);
+        console.timeEnd("settlement proof created");
+    } catch (err) {
+        console.error(err);
+        return;
+    }
+    try {
+        console.log("Creating transaction");
+        console.time("settlement transaction");
+        let tx = await Mina.transaction(
+            {
+                sender: feePayer,
+                fee: 1e8,
+                nonce: nonce,
+            },
+            async () => {
+                await drm.settle(proof);
             }
-        } catch (error) {
-            throw new Error(`${error}`);
+        );
+        await tx.prove();
+        const sentTx = await tx.sign([feepayerKey]).send();
+        console.timeEnd("settlement transaction");
+        if (sentTx.status === "pending") {
+            console.log(`https://minascan.io/devnet/tx/${sentTx.hash}?type=zk-tx`);
         }
+    } catch (error) {
+        throw new Error(`${error}`);
     }
 }
 
