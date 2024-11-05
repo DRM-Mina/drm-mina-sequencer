@@ -8,4 +8,4 @@ WORKDIR /settlement
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
-CMD ["pnpm", "build-and-start:settlement"]
+CMD ["pnpm", "prod:settlement"]
