@@ -5,6 +5,7 @@ import { DeviceIdentifier } from "drm-mina-contracts/build/src/lib/DeviceIdentif
 import { DeviceSession } from "drm-mina-contracts/build/src/lib/DeviceSessionProof.js";
 import { BundledDeviceSession } from "drm-mina-contracts/build/src/lib/BundledDeviceSessionProof.js";
 import dotenv from "dotenv";
+import logger from "./logger";
 dotenv.config();
 
 export function checkEnv(input: string | undefined, message: string): string {
@@ -26,41 +27,44 @@ export function initializeMinaInstance() {
 }
 
 export async function fetchActions(drm: DRM): Promise<number> {
-    let latest_offchain_commitment = await drm.offchainStateCommitments.fetch();
-    const actionStateRange = {
-        fromActionState: latest_offchain_commitment?.actionState,
-    };
+    try {
+        let latest_offchain_commitment = await drm.offchainStateCommitments.fetch();
+        const actionStateRange = {
+            fromActionState: latest_offchain_commitment?.actionState,
+        };
 
-    let result = await Mina.fetchActions(drm.address, actionStateRange);
-    if ("error" in result) throw Error(JSON.stringify(result));
-    let actions = result.reduce((accumulator, currentItem) => {
-        return (
-            accumulator +
-            currentItem.actions.reduce((innerAccumulator) => {
-                return innerAccumulator + 1;
-            }, 0)
-        );
-    }, 0);
+        let result = await Mina.fetchActions(drm.address, actionStateRange);
+        if ("error" in result) throw Error(JSON.stringify(result));
+        let actions = result.reduce((accumulator, currentItem) => {
+            return (
+                accumulator +
+                currentItem.actions.reduce((innerAccumulator) => {
+                    return innerAccumulator + 1;
+                }, 0)
+            );
+        }, 0);
 
-    return actions;
+        return actions;
+    } catch (error) {
+        throw new Error(`Error fetching actions: ${error}`);
+    }
 }
 
 export async function settle(drm: DRM, feepayerKey: PrivateKey, nonce: number): Promise<void> {
     let proof: StateProof;
-
     const feePayer = feepayerKey.toPublicKey();
 
     try {
-        console.time("settlement proof created");
+        logger.info("Creating settlement proof");
+        const currentTime = Date.now();
         proof = await drm.offchainState.createSettlementProof();
-        console.timeEnd("settlement proof created");
+        logger.info(`Settlement proof created in ${(Date.now() - currentTime) / 1000} seconds`);
     } catch (err) {
-        console.error(err);
-        return;
+        throw new Error(`Error creating settlement proof: ${err}`);
     }
     try {
-        console.log("Creating transaction");
-        console.time("settlement transaction");
+        logger.info("Submitting settlement");
+        const currentTime = Date.now();
         let tx = await Mina.transaction(
             {
                 sender: feePayer,
@@ -73,12 +77,15 @@ export async function settle(drm: DRM, feepayerKey: PrivateKey, nonce: number): 
         );
         await tx.prove();
         const sentTx = await tx.sign([feepayerKey]).send();
-        console.timeEnd("settlement transaction");
         if (sentTx.status === "pending") {
-            console.log(`https://minascan.io/devnet/tx/${sentTx.hash}?type=zk-tx`);
+            logger.info(
+                `Settlement submitted https://minascan.io/devnet/tx/${sentTx.hash}?type=zk-tx in ${
+                    (Date.now() - currentTime) / 1000
+                } seconds`
+            );
         }
-    } catch (error) {
-        throw new Error(`${error}`);
+    } catch (err) {
+        throw new Error(`Error submitting settlement to Mina: ${err}`);
     }
 }
 
@@ -108,7 +115,7 @@ export async function compileContracts() {
         await DRM.compile();
         console.timeEnd("DRM compile");
     } catch (err) {
-        console.error(err);
+        throw new Error(`Error compiling contracts: ${err}`);
     }
 }
 

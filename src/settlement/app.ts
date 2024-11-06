@@ -10,7 +10,7 @@ import {
     settle,
 } from "./utils.js";
 
-const MIN_ACTIONS_TO_REDUCE = 10;
+const MIN_ACTIONS_TO_REDUCE = 4;
 const MAX_WAIT_MS = 1000 * 60 * 5; // 5 minutes
 
 const feepayerKey = PrivateKey.fromBase58(
@@ -25,26 +25,31 @@ let feepayerNonce = await getNonce(feepayerKey);
 
 async function settlementCycle() {
     for (let i = 0; i < instances.length; i++) {
-        const actions = await fetchActions(instances[i].contract);
-        logger.info(`${actions} actions pending for ${instances[i].contractAddress}`);
-        logger.info(
-            `Last settled ${Math.floor(
-                (Date.now() - instances[i].startTime) / 1000 / 60
-            )} minutes ago`
-        );
+        let actions;
+        try {
+            actions = await fetchActions(instances[i].contract);
+        } catch (err) {
+            logger.error(err);
+            continue;
+        }
+        if (actions > 0) {
+            logger.info(
+                `${actions} unsettled actions found for ${instances[i].contractAddress}, ${
+                    (Date.now() - instances[i].startTime - MAX_WAIT_MS) / 1000
+                } seconds until settle`
+            );
+        }
         let shouldSettle =
             actions > 0 &&
             (actions >= MIN_ACTIONS_TO_REDUCE || instances[i].startTime + MAX_WAIT_MS < Date.now());
 
         if (shouldSettle) {
             try {
-                logger.info(`Settling actions for ${instances[i].contractAddress}`);
                 await settle(instances[i].contract, feepayerKey, feepayerNonce);
-                logger.info(`Settled actions for ${instances[i].contractAddress}`);
                 instances[i].startTime = Date.now();
                 feepayerNonce++;
             } catch (err) {
-                logger.error("Error settling actions:", err);
+                logger.error(`Error settling ${instances[i].contractAddress}: ${err}`);
             }
         } else if (actions === 0) {
             instances[i].startTime = Date.now();
