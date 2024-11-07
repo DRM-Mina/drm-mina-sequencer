@@ -50,7 +50,7 @@ export default class Bundler {
     private async checkBundle(): Promise<void> {
         const currentTime = Date.now();
         console.log(
-            `Checking bundle: ${this.currentBundledCount} proofs in bundle, ${this.proofQueue.length} in queue`
+            `${this.currentBundledCount} proofs in bundle, ${this.proofQueue.length} in queue`
         );
 
         if (
@@ -174,7 +174,7 @@ export default class Bundler {
 
             logger.info(`Settle tx creating bundle with ${this.currentBundledCount} proofs`);
 
-            const bundleTx = Mina.transaction(
+            const bundleSettleTx = await Mina.transaction(
                 {
                     sender: this.feePayerPubKey,
                     fee: 1e8,
@@ -186,13 +186,12 @@ export default class Bundler {
                 }
             );
 
-            await bundleTx.prove();
-            const pendingTx = await bundleTx.sign([this.feePayerPrivKey]).send();
-            logger.info(`Bundle sent: https://minascan.io/devnet/tx/${pendingTx.hash}`);
+            await bundleSettleTx.prove();
+            const pendingTx = await bundleSettleTx.sign([this.feePayerPrivKey]).send();
             logger.info(
-                `Bundle count: ${this.currentBundledCount}, takes: ${
-                    (Date.now() - this.bundleStartTime!) / 1000
-                }s`
+                `Bundle sent: https://minascan.io/devnet/tx/${pendingTx.hash}, bundle count: ${
+                    this.currentBundledCount
+                }, takes: ${(Date.now() - this.bundleStartTime!) / 1000}s`
             );
 
             this.currentBundledProof = this.baseProof;

@@ -67,12 +67,8 @@ export async function compileContracts() {
         console.timeEnd("DeviceIdentifier compile");
 
         console.time("DeviceSession compile");
-        const { verificationKey } = await DeviceSession.compile();
+        await DeviceSession.compile();
         console.timeEnd("DeviceSession compile");
-
-        if (!verificationKey) {
-            throw new Error("Failed to compile DeviceSession");
-        }
 
         console.time("BundledDeviceSession compile");
         await BundledDeviceSession.compile();
@@ -84,12 +80,7 @@ export async function compileContracts() {
         );
         console.timeEnd("baseProof");
 
-        console.log(
-            `Base proof: ${baseProof.publicOutput.deviceCount.toString()}, ${baseProof.publicInput.toBase58()}`
-        );
-
         const bundler = Bundler.getInstance();
-        console.log("Setting base proof");
         bundler.setBaseProof(baseProof);
 
         console.time("offchainState compile");
@@ -99,10 +90,8 @@ export async function compileContracts() {
         console.time("DRM compile");
         await DRM.compile();
         console.timeEnd("DRM compile");
-
-        return verificationKey;
     } catch (err) {
-        console.error(err);
+        throw new Error(`Failed to compile contracts: ${err}`);
     }
 }
 
@@ -120,12 +109,8 @@ export async function initializeContracts(gameData: GameData[], gameContracts: G
                 drm,
             });
         }
-
-        // const bundler = Bundler.getInstance();
-        // const drm = new DRM(PublicKey.fromBase58(process.env.DRM_ADDR3!));
-        // bundler.setGameToken(PublicKey.fromBase58(process.env.GAME_TOKEN_ADDR3!), drm);
     } catch (err) {
-        console.error(err);
+        throw new Error(`Failed to initialize contracts: ${err}`);
     }
 }
 

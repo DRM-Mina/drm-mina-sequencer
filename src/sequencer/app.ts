@@ -19,13 +19,11 @@ const connection = new IORedis({
 });
 
 async function initializeWorker() {
-    console.log("Initializing worker");
-    console.log("Initializing Mina instance");
+    logger.info("Initializing worker");
     initializeMinaInstance();
 
-    console.log("Compiling contracts");
-    const verificationKey = await compileContracts();
-    console.log("Verification key:", verificationKey?.hash.toString());
+    await compileContracts();
+    logger.info("Contracts compiled");
 
     const GameTokenPubkey = PublicKey.fromBase58(process.env.GAME_TOKEN_ADDR3!);
     const DRMInstance = new DRM(PublicKey.fromBase58(process.env.DRM_ADDR3!));
@@ -37,15 +35,14 @@ async function initializeWorker() {
     const worker = new Worker(
         "proofQueue",
         async (job) => {
-            console.log(`Processing job ${job.id}`);
-            console.log("job name:", job.name);
+            logger.info(`Processing job ${job.id}`);
             const { proof } = job.data;
             try {
                 await bundler.addProof(proof);
                 logger.info(`Proof ${job.id} added to bundler`);
             } catch (err) {
                 logger.error(`Failed to add proof ${job.id} to bundler: ${err}`);
-                throw err;
+                throw err; // This will cause the job to be requeued
             }
         },
         {
@@ -56,18 +53,18 @@ async function initializeWorker() {
     );
 
     worker.on("completed", (job) => {
-        console.log(`Job ${job.id} has completed`);
+        logger.info(`Job ${job.id} has completed`);
     });
 
     worker.on("failed", (job) => {
-        console.error(`Job has failed with error: ${job?.failedReason}`);
+        logger.error(`Job has failed with error: ${job?.failedReason}`);
     });
 
     worker.on("error", (err) => {
-        console.error("Worker error:", err);
+        logger.error("Worker error:", err);
     });
 
-    console.log("Worker is listening for jobs");
+    logger.info("Worker is listening for jobs");
 }
 
 initializeWorker().catch((err) => {

@@ -1,6 +1,7 @@
 services:
     express:
         container_name: drm-mina-express
+        restart: unless-stopped
         build:
             context: ./
             dockerfile: ./docker/express/Dockerfile
@@ -17,6 +18,7 @@ services:
 
     sequencer:
         container_name: drm-mina-sequencer
+        restart: unless-stopped
         build:
             context: ./
             dockerfile: ./docker/sequencer/Dockerfile
@@ -30,6 +32,7 @@ services:
 
     settlement:
         container_name: drm-mina-settlement
+        restart: unless-stopped
         build:
             context: ./
             dockerfile: ./docker/settlement/Dockerfile
