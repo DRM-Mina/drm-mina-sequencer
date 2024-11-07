@@ -25,7 +25,7 @@ const instances = getDRMInstances();
 let feepayerNonce = await getNonce(feepayerKey);
 
 async function settlementCycle() {
-    const currentBlockHeight = getBlockHeight();
+    const currentBlockHeight = await getBlockHeight();
     logger.info(`Checking for unsettled actions at block height ${currentBlockHeight}`);
     for (let i = 0; i < instances.length; i++) {
         let actions;

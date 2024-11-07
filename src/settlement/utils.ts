@@ -1,4 +1,4 @@
-import { fetchAccount, Mina, PrivateKey, PublicKey } from "o1js";
+import { fetchAccount, fetchLastBlock, Mina, PrivateKey, PublicKey } from "o1js";
 import { DRM, offchainState, StateProof } from "drm-mina-contracts/build/src/DRM.js";
 import { GameToken } from "drm-mina-contracts/build/src/GameToken.js";
 import { DeviceIdentifier } from "drm-mina-contracts/build/src/lib/DeviceIdentifierProof.js";
@@ -9,6 +9,9 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+const minaEndpoint = checkEnv(process.env.MINA_ENDPOINT, "MISSING MINA_ENDPOINT");
+const archiveEndpoint = checkEnv(process.env.ARCHIVE_ENDPOINT, "MISSING ARCHIVE_ENDPOINT");
+
 export function checkEnv(input: string | undefined, message: string): string {
     if (input === undefined) {
         throw new Error(message);
@@ -17,9 +20,6 @@ export function checkEnv(input: string | undefined, message: string): string {
 }
 
 export function initializeMinaInstance() {
-    const minaEndpoint = checkEnv(process.env.MINA_ENDPOINT, "MISSING MINA_ENDPOINT");
-    const archiveEndpoint = checkEnv(process.env.ARCHIVE_ENDPOINT, "MISSING ARCHIVE_ENDPOINT");
-
     const Network = Mina.Network({
         mina: minaEndpoint,
         archive: archiveEndpoint,
@@ -172,7 +172,7 @@ export async function getNonce(feepayerKey: PrivateKey) {
     return Number(account.nonce.toBigint());
 }
 
-export function getBlockHeight() {
-    const blockHeight = Mina.getNetworkState().blockchainLength;
-    return Number(blockHeight.toBigint());
+export async function getBlockHeight() {
+    const block = await fetchLastBlock(minaEndpoint);
+    return Number(block.blockchainLength.toBigint());
 }
