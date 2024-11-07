@@ -51,9 +51,20 @@ export async function fetchActions(drm: DRM): Promise<number> {
     }
 }
 
-export async function settle(drm: DRM, feepayerKey: PrivateKey, nonce: number): Promise<void> {
+export async function settle(
+    drm: DRM,
+    drmAddress: string,
+    feepayerKey: PrivateKey,
+    nonce: number
+): Promise<void> {
     let proof: StateProof;
     const feePayer = feepayerKey.toPublicKey();
+
+    try {
+        await fetchAccount({ publicKey: PublicKey.fromBase58(drmAddress) });
+    } catch (err) {
+        throw new Error(`Error fetching account: ${err}`);
+    }
 
     try {
         logger.info("Creating settlement proof");

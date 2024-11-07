@@ -2,7 +2,7 @@ import {
     BundledDeviceSession,
     BundledDeviceSessionProof,
 } from "drm-mina-contracts/build/src/lib/BundledDeviceSessionProof.js";
-import { Mina, PrivateKey, PublicKey } from "o1js";
+import { fetchAccount, Mina, PrivateKey, PublicKey } from "o1js";
 import { checkEnv, prettierAddress } from "./utils.js";
 import { DRM } from "drm-mina-contracts/build/src/DRM.js";
 import { DeviceSessionProof } from "drm-mina-contracts/build/src/lib/DeviceSessionProof.js";
@@ -11,6 +11,7 @@ import logger from "./logger.js";
 export default class Bundler {
     private static instance: Bundler;
     private gameTokenPubKey: PublicKey | undefined;
+    private drmPubKey: PublicKey | undefined;
     private drmInstance: DRM | undefined;
     private proofQueue: DeviceSessionProof[];
     private baseProof: BundledDeviceSessionProof | undefined;
@@ -28,6 +29,7 @@ export default class Bundler {
         this.baseProof = undefined;
         this.currentBundledCount = 0;
         this.gameTokenPubKey = undefined;
+        this.drmPubKey = undefined;
         this.checkInterval = setInterval(() => this.checkBundle(), 60000);
 
         const feePayerPrivKeyString = checkEnv(
@@ -71,9 +73,10 @@ export default class Bundler {
         this.baseProof = baseProof;
     }
 
-    public setGameToken(gameTokenPubKey: PublicKey, drmInstance: DRM): void {
+    public setGameToken(gameTokenPubKey: PublicKey, drmInstance: DRM, drmPubKey: PublicKey): void {
         this.gameTokenPubKey = gameTokenPubKey;
         this.drmInstance = drmInstance;
+        this.drmPubKey = drmPubKey;
     }
 
     public async addProof(jsonProof: string): Promise<void> {
@@ -172,7 +175,13 @@ export default class Bundler {
                 throw new Error("DRM instance not set");
             }
 
+            if (!this.drmPubKey) {
+                throw new Error("DRM public key not set");
+            }
+
             logger.info(`Settle tx creating bundle with ${this.currentBundledCount} proofs`);
+
+            await fetchAccount({ publicKey: this.drmPubKey });
 
             const bundleSettleTx = await Mina.transaction(
                 {

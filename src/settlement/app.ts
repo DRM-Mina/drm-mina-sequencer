@@ -52,8 +52,14 @@ async function settlementCycle() {
 
         if (shouldSettle) {
             try {
-                await settle(instances[i].contract, feepayerKey, feepayerNonce);
+                await settle(
+                    instances[i].contract,
+                    instances[i].contractAddress,
+                    feepayerKey,
+                    feepayerNonce
+                );
                 instances[i].startTime = Date.now();
+                instances[i].lastAttemptBlock = currentBlockHeight;
                 feepayerNonce++;
             } catch (err) {
                 logger.error(`Error settling ${instances[i].contractAddress}: ${err}`);

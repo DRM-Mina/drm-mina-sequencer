@@ -26,11 +26,12 @@ async function initializeWorker() {
     logger.info("Contracts compiled");
 
     const GameTokenPubkey = PublicKey.fromBase58(process.env.GAME_TOKEN_ADDR3!);
-    const DRMInstance = new DRM(PublicKey.fromBase58(process.env.DRM_ADDR3!));
+    const DRMPubkey = PublicKey.fromBase58(process.env.DRM_ADDR3!);
+    const DRMInstance = new DRM(DRMPubkey);
     DRMInstance.offchainState.setContractInstance(DRMInstance);
 
     const bundler = Bundler.getInstance();
-    bundler.setGameToken(GameTokenPubkey, DRMInstance);
+    bundler.setGameToken(GameTokenPubkey, DRMInstance, DRMPubkey);
 
     const worker = new Worker(
         "proofQueue",
