@@ -4,8 +4,9 @@ import { GameToken } from "drm-mina-contracts/build/src/GameToken.js";
 import { DeviceIdentifier } from "drm-mina-contracts/build/src/lib/DeviceIdentifierProof.js";
 import { DeviceSession } from "drm-mina-contracts/build/src/lib/DeviceSessionProof.js";
 import { BundledDeviceSession } from "drm-mina-contracts/build/src/lib/BundledDeviceSessionProof.js";
+import logger from "./logger.js";
 import dotenv from "dotenv";
-import logger from "./logger";
+
 dotenv.config();
 
 export function checkEnv(input: string | undefined, message: string): string {
