@@ -38,6 +38,9 @@ async function settlementCycle() {
                     (Date.now() - instances[i].startTime - MAX_WAIT_MS) / 1000
                 } seconds until settle`
             );
+        } else {
+            logger.info(`No unsettled actions found for ${instances[i].contractAddress}`);
+            continue;
         }
         let shouldSettle =
             actions > 0 &&

@@ -63,10 +63,11 @@ export async function settle(drm: DRM, feepayerKey: PrivateKey, nonce: number): 
     } catch (err) {
         throw new Error(`Error creating settlement proof: ${err}`);
     }
+    let tx;
+    const currentTime = Date.now();
     try {
-        logger.info("Submitting settlement");
-        const currentTime = Date.now();
-        let tx = await Mina.transaction(
+        logger.info("Creating settlement transaction");
+        tx = await Mina.transaction(
             {
                 sender: feePayer,
                 fee: 1e8,
@@ -77,6 +78,15 @@ export async function settle(drm: DRM, feepayerKey: PrivateKey, nonce: number): 
             }
         );
         await tx.prove();
+        logger.info(
+            `Settlement transaction created in ${
+                (Date.now() - currentTime) / 1000
+            } seconds sending...`
+        );
+    } catch (err) {
+        throw new Error(`Error creating settlement tx: ${err}`);
+    }
+    try {
         const sentTx = await tx.sign([feepayerKey]).send();
         if (sentTx.status === "pending") {
             logger.info(
@@ -84,9 +94,11 @@ export async function settle(drm: DRM, feepayerKey: PrivateKey, nonce: number): 
                     (Date.now() - currentTime) / 1000
                 } seconds`
             );
+        } else {
+            logger.error(`Settlement failed: ${sentTx.status}`);
         }
     } catch (err) {
-        throw new Error(`Error submitting settlement to Mina: ${err}`);
+        throw new Error(`Error sending settlement tx: ${err}`);
     }
 }
 
