@@ -4,6 +4,7 @@ import {
     checkEnv,
     compileContracts,
     fetchActions,
+    getBlockHeight,
     getDRMInstances,
     getNonce,
     initializeMinaInstance,
@@ -24,6 +25,8 @@ const instances = getDRMInstances();
 let feepayerNonce = await getNonce(feepayerKey);
 
 async function settlementCycle() {
+    const currentBlockHeight = getBlockHeight();
+    logger.info(`Checking for unsettled actions at block height ${currentBlockHeight}`);
     for (let i = 0; i < instances.length; i++) {
         let actions;
         try {
@@ -44,6 +47,7 @@ async function settlementCycle() {
         }
         let shouldSettle =
             actions > 0 &&
+            currentBlockHeight > instances[i].lastAttemptBlock &&
             (actions >= MIN_ACTIONS_TO_REDUCE || instances[i].startTime + MAX_WAIT_MS < Date.now());
 
         if (shouldSettle) {

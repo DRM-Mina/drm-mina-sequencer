@@ -147,16 +147,19 @@ export function getDRMInstances() {
             contract: drm1,
             contractAddress: process.env.DRM_ADDR1!,
             startTime: 0,
+            lastAttemptBlock: 0,
         },
         {
             contract: drm2,
             contractAddress: process.env.DRM_ADDR2!,
             startTime: 0,
+            lastAttemptBlock: 0,
         },
         {
             contract: drm3,
             contractAddress: process.env.DRM_ADDR3!,
             startTime: 0,
+            lastAttemptBlock: 0,
         },
     ];
 }
@@ -167,4 +170,9 @@ export async function getNonce(feepayerKey: PrivateKey) {
 
     const account = Mina.getAccount(pubkey);
     return Number(account.nonce.toBigint());
+}
+
+export function getBlockHeight() {
+    const blockHeight = Mina.getNetworkState().blockchainLength;
+    return Number(blockHeight.toBigint());
 }
