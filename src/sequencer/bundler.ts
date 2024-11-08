@@ -8,6 +8,8 @@ import { DRM } from "drm-mina-contracts/build/src/DRM.js";
 import { DeviceSessionProof } from "drm-mina-contracts/build/src/lib/DeviceSessionProof.js";
 import logger from "./logger.js";
 
+const BUNDLE_WAIT_TIME = 2 * 60 * 1000; // 2 min
+
 export default class Bundler {
     private static instance: Bundler;
     private gameTokenPubKey: PublicKey | undefined;
@@ -59,7 +61,7 @@ export default class Bundler {
             this.bundleStartTime &&
             this.currentBundledCount > 0 &&
             !this.isBundleInProgress &&
-            currentTime - this.bundleStartTime >= 3 * 60 * 1000 // 3 min
+            currentTime - this.bundleStartTime >= BUNDLE_WAIT_TIME
         ) {
             try {
                 await this.sendBundle();
@@ -211,7 +213,10 @@ export default class Bundler {
             logger.error(`Error sending bundle: ${e}`);
             this.bundleSendingTrial++;
 
-            if (this.bundleSendingTrial) {
+            logger.info("fetching actions");
+            await Mina.fetchActions(this.drmPubKey!);
+            logger.info("fetched actions");
+            if (this.bundleSendingTrial >= 2) {
                 logger.error(`Bundle sending failed after 2 trials, resetting bundle`);
                 this.currentBundledProof = this.baseProof;
                 this.currentBundledCount = 0;
