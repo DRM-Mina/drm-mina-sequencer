@@ -15,6 +15,7 @@ import signedUrlRoutes from "./routes/signedUrl.js";
 import sessionRoutes from "./routes/session.js";
 import { envCheck } from "./utils/envCheck.js";
 import { commonLimiter } from "./middlewares/rateLimiter.js";
+import { startGamePriceUpdater } from "./utils/updateGamePrices.js";
 
 envCheck();
 
@@ -52,6 +53,7 @@ app.use("/submit-session", sessionRoutes);
 
 try {
     await connectToDatabase();
+    startGamePriceUpdater();
     app.listen(port, () => {
         logger.info(`Server running on http://localhost:${port}`);
     });

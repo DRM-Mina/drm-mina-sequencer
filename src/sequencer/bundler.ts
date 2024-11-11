@@ -181,7 +181,9 @@ export default class Bundler {
                 throw new Error("DRM public key not set");
             }
 
-            logger.info(`Settle tx creating bundle with ${this.currentBundledCount} proofs`);
+            logger.info(
+                `Session bundle tx creating bundle with ${this.currentBundledCount} proofs`
+            );
 
             await fetchAccount({ publicKey: this.drmPubKey });
 
