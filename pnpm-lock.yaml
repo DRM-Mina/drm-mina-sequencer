@@ -24,8 +24,8 @@ importers:
         specifier: ^16.4.5
         version: 16.4.5
       drm-mina-contracts:
-        specifier: ^0.4.2
-        version: 0.4.2
+        specifier: ^0.4.4
+        version: 0.4.4
       express:
         specifier: ^4.19.2
         version: 4.21.1
@@ -54,8 +54,8 @@ importers:
         specifier: ^8.6.1
         version: 8.7.1
       o1js:
-        specifier: ^1.9.1
-        version: 1.9.1
+        specifier: https://pkg.pr.new/o1-labs/o1js@fc16ce3
+        version: https://pkg.pr.new/o1-labs/o1js@fc16ce3
       serve-static:
         specifier: ^1.15.0
         version: 1.16.2
@@ -515,8 +515,8 @@ packages:
     peerDependencies:
       o1js: ^1.9
 
-  drm-mina-contracts@0.4.2:
-    resolution: {integrity: sha512-Koazu2qEIQI2Pxp133o1um3sfEx+wP70DvL3siOhiXAPCH1969Pt373rv0nFhfimynvY4OpISHcTfQwp+1eZpg==}
+  drm-mina-contracts@0.4.4:
+    resolution: {integrity: sha512-QpZaaVUxa9LZAbV1+CHPbethChFgJKPA+VtRLm1Uf3ehaklJW1bmlhL+yqqQ8TcH9vAurHG7OqYIOC/hDw35ug==}
     engines: {node: '>=18.14.0'}
 
   ecdsa-sig-formatter@1.0.11:
@@ -919,8 +919,9 @@ packages:
     engines: {node: '>=18.14.0'}
     hasBin: true
 
-  o1js@1.9.1:
-    resolution: {integrity: sha512-QbeFb2WU4YpCRIz/2hu3lhwioDntpmn8M7Zl6LrIh3fIPoHMQcN9OIqE8whN83ttcioV3HsJwszKtfkBC5vEYQ==}
+  o1js@https://pkg.pr.new/o1-labs/o1js@fc16ce3:
+    resolution: {tarball: https://pkg.pr.new/o1-labs/o1js@fc16ce3}
+    version: 1.9.0
     engines: {node: '>=18.14.0'}
     hasBin: true
 
@@ -1517,10 +1518,10 @@ snapshots:
       dotenv: 16.4.5
       o1js: 1.9.0
 
-  drm-mina-contracts@0.4.2:
+  drm-mina-contracts@0.4.4:
     dependencies:
       dotenv: 16.4.5
-      o1js: 1.9.1
+      o1js: https://pkg.pr.new/o1-labs/o1js@fc16ce3
     transitivePeerDependencies:
       - encoding
 
@@ -1935,7 +1936,7 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
-  o1js@1.9.1:
+  o1js@https://pkg.pr.new/o1-labs/o1js@fc16ce3:
     dependencies:
       blakejs: 1.2.1
       cachedir: 2.4.0
