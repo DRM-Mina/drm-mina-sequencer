@@ -2,9 +2,9 @@ import rateLimit from "express-rate-limit";
 
 export const getSignedUrlLimiter = rateLimit({
     windowMs: 60 * 60 * 1000,
-    max: 5,
+    max: 50, // Todo - Change this after testing
     message: {
-        message: "Too many requests, please try again later.",
+        message: "Too many requests",
     },
     standardHeaders: true,
     legacyHeaders: false,
@@ -12,9 +12,9 @@ export const getSignedUrlLimiter = rateLimit({
 
 export const commonLimiter = rateLimit({
     windowMs: 60 * 60 * 1000,
-    max: 100,
+    max: 1000,
     message: {
-        message: "Too many requests, please try again later.",
+        message: "Too many requests",
     },
     standardHeaders: true,
     legacyHeaders: false,

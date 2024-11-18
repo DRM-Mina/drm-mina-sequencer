@@ -3,6 +3,7 @@ import AWS from "aws-sdk";
 import logger from "../logger.js";
 import dotenv from "dotenv";
 import { getSignedUrlLimiter } from "../middlewares/rateLimiter.js";
+import { authenticateToken } from "../middlewares/authenticateToken.js";
 dotenv.config();
 
 const router: Router = express.Router();
@@ -14,7 +15,7 @@ const s3 = new AWS.S3({
     signatureVersion: "v4",
 });
 
-router.post("/", getSignedUrlLimiter, async (req, res) => {
+router.post("/", getSignedUrlLimiter, authenticateToken, async (req, res) => {
     const { fileName } = req.body;
 
     if (!fileName) {
