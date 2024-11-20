@@ -7,6 +7,7 @@ import {
 import { VerificationKey, verify } from "o1js";
 import { Queue } from "bullmq";
 import IORedis from "ioredis";
+import { Game } from "../db/schemas.js";
 
 const redisHost = process.env.REDIS_HOST || "redis";
 const redisPort = process.env.REDIS_PORT || "6379";
@@ -24,10 +25,7 @@ const router: Router = express.Router();
 
 let verificationKey: VerificationKey;
 
-const proofQueue = new Queue("proofQueue", {
-    connection: connection,
-});
-await proofQueue.setGlobalConcurrency(1);
+// await proofQueue.setGlobalConcurrency(1);
 
 router.post("/", async (req, res) => {
     try {
@@ -43,7 +41,9 @@ router.post("/", async (req, res) => {
             return;
         }
 
-        const sessionProof = await DeviceSessionProof.fromJSON(JSON.parse(proof));
+        const sessionProof: DeviceSessionProof = await DeviceSessionProof.fromJSON(
+            JSON.parse(proof)
+        );
 
         const ok = await verify(sessionProof, verificationKey);
 
@@ -52,9 +52,21 @@ router.post("/", async (req, res) => {
             res.status(400).send({ message: "Invalid proof" });
             return;
         }
-        if (ok) {
-            logger.info("Proof verified");
+
+        logger.info("Proof verified");
+
+        const gameTokenAddress = sessionProof.publicInput.gameToken.toBase58();
+        const gameTokenAddressList = await getGameTokenContractList();
+
+        if (!gameTokenAddressList.includes(gameTokenAddress)) {
+            logger.error(`Not registered game token: ${gameTokenAddress}`);
+            res.status(400).send({ message: "Game token not registered" });
+            return;
         }
+
+        const proofQueue = new Queue(`proofQueue${gameTokenAddress}`, {
+            connection: connection,
+        });
 
         await proofQueue.add(
             "addProof",
@@ -70,7 +82,7 @@ router.post("/", async (req, res) => {
                 },
             }
         );
-        console.log("added proof to queue");
+        logger.info("Proof added to queue: ", prettierAddress(gameTokenAddress));
 
         res.status(200).send({ message: "Proof submitted" });
     } catch (err) {
@@ -78,5 +90,13 @@ router.post("/", async (req, res) => {
         res.status(500).send({ message: "Error submitting session" });
     }
 });
+
+async function getGameTokenContractList() {
+    const gameTokenAddresses = await Game.find({}, { gameTokenContractAddress: 1, _id: 0 });
+    return gameTokenAddresses.map((game) => game.gameTokenContractAddress);
+}
+function prettierAddress(address: string): string {
+    return `${address.slice(0, 4)}...${address.slice(-6)}`;
+}
 
 export default router;

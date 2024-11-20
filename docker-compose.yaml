@@ -16,8 +16,8 @@ services:
         networks:
             - app-network
 
-    sequencer:
-        container_name: drm-mina-sequencer
+    sequencer-1:
+        container_name: drm-mina-sequencer-1
         restart: unless-stopped
         build:
             context: ./
@@ -27,6 +27,40 @@ services:
         environment:
             - REDIS_HOST=redis
             - REDIS_PORT=6379
+            - GAME_TOKEN_ADDRESS=B62qrhSFNCiLhxwvGeVE4H9eiHYGzbdz6x98rJW3pMfNAdWd8XJb9rv
+            - DRM_ADDRESS=B62qkBz8sKUr48HbnUeVt9WvpUJ6tyK4YmuUsAxTMdQ7Lo9bX8iw364
+        networks:
+            - app-network
+
+    sequencer-2:
+        container_name: drm-mina-sequencer-2
+        restart: unless-stopped
+        build:
+            context: ./
+            dockerfile: ./docker/sequencer/Dockerfile
+        depends_on:
+            - redis
+        environment:
+            - REDIS_HOST=redis
+            - REDIS_PORT=6379
+            - GAME_TOKEN_ADDRESS=B62qk9CzzR2FyxmZDuSQ7KdvGexPZwwd8K3RccwJZwrSmvnBSsJCYwe
+            - DRM_ADDRESS=B62qjubSRcRR2FHN1AMuTy2nAvmAUfof6L6EovgixmoE7DykvZYzz6B
+        networks:
+            - app-network
+
+    sequencer-3:
+        container_name: drm-mina-sequencer-3
+        restart: unless-stopped
+        build:
+            context: ./
+            dockerfile: ./docker/sequencer/Dockerfile
+        depends_on:
+            - redis
+        environment:
+            - REDIS_HOST=redis
+            - REDIS_PORT=6379
+            - GAME_TOKEN_ADDRESS=B62qitxXzCSz5KdzPGhKANhiGepdqNSuE7dMhD77RCiEKJfgn2oFwSu
+            - DRM_ADDRESS=B62qmSFqFLF8wbpGQYriJn13AwDDsCqPrSkbAJz5ZAHknAzDGgRFyMG
         networks:
             - app-network
 
