@@ -8,6 +8,12 @@ import logger from "./logger.js";
 
 const redisHost = process.env.REDIS_HOST || "redis";
 const redisPort = process.env.REDIS_PORT || "6379";
+const gameTokenAddress = process.env.GAME_TOKEN_ADDRESS;
+const drmAddress = process.env.DRM_ADDRESS;
+
+if (!gameTokenAddress || !drmAddress) {
+    throw new Error("Missing GAME_TOKEN_ADDRESS or DRM_ADDRESS");
+}
 
 console.log("Connecting to Redis at", redisHost, redisPort);
 
@@ -22,11 +28,12 @@ async function initializeWorker() {
     logger.info("Initializing worker");
     initializeMinaInstance();
 
-    await compileContracts();
+    const GameTokenPubkey = PublicKey.fromBase58(gameTokenAddress!);
+    const DRMPubkey = PublicKey.fromBase58(drmAddress!);
+
+    await compileContracts(GameTokenPubkey);
     logger.info("Contracts compiled");
 
-    const GameTokenPubkey = PublicKey.fromBase58(process.env.GAME_TOKEN_ADDR3!);
-    const DRMPubkey = PublicKey.fromBase58(process.env.DRM_ADDR3!);
     const DRMInstance = new DRM(DRMPubkey);
     DRMInstance.offchainState.setContractInstance(DRMInstance);
 
@@ -34,7 +41,7 @@ async function initializeWorker() {
     bundler.setGameToken(GameTokenPubkey, DRMInstance, DRMPubkey);
 
     const worker = new Worker(
-        "proofQueue",
+        `proofQueue${gameTokenAddress}`,
         async (job) => {
             logger.info(`Processing job ${job.id}`);
             const { proof } = job.data;

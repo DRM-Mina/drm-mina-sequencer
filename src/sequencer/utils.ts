@@ -56,7 +56,7 @@ export function initializeMinaInstance() {
     Mina.setActiveInstance(Network);
 }
 
-export async function compileContracts() {
+export async function compileContracts(gameTokenPubkey: PublicKey) {
     try {
         console.time("GameToken.compile");
         await GameToken.compile();
@@ -75,9 +75,7 @@ export async function compileContracts() {
         console.timeEnd("BundledDeviceSession compile");
 
         console.time("baseProof");
-        const baseProof = await BundledDeviceSession.base(
-            PublicKey.fromBase58(process.env.GAME_TOKEN_ADDR3!)
-        );
+        const baseProof = await BundledDeviceSession.base(gameTokenPubkey);
         console.timeEnd("baseProof");
 
         const bundler = Bundler.getInstance();
