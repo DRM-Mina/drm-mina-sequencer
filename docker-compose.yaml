@@ -8,7 +8,9 @@ services:
         ports:
             - "3333:3333"
         depends_on:
-            - sequencer
+            - sequencer-1
+            - sequencer-2
+            - sequencer-3
             - redis
         environment:
             - REDIS_HOST=redis
