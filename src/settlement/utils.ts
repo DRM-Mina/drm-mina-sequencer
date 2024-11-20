@@ -187,3 +187,7 @@ export async function getBlockHeight() {
     const block = await fetchLastBlock(minaEndpoint);
     return Number(block.blockchainLength.toBigint());
 }
+
+export function prettierAddress(address: string): string {
+    return `${address.slice(0, 4)}...${address.slice(-6)}`;
+}

@@ -8,11 +8,12 @@ import {
     getDRMInstances,
     getNonce,
     initializeMinaInstance,
+    prettierAddress,
     settle,
 } from "./utils.js";
 
 const MIN_ACTIONS_TO_REDUCE = 4;
-const MAX_WAIT_MS = 1000 * 60 * 5; // 5 minutes
+const MAX_WAIT_MS = 1000 * 60 * 3; // 3 minutes
 
 const feepayerKey = PrivateKey.fromBase58(
     checkEnv(process.env.SETTLEMENT_FEE_PAYER_KEY, "MISSING SETTLEMENT_FEE_PAYER_KEY")
@@ -26,7 +27,7 @@ let feepayerNonce = await getNonce(feepayerKey);
 
 async function settlementCycle() {
     const currentBlockHeight = await getBlockHeight();
-    logger.info(`Checking for unsettled actions at block height ${currentBlockHeight}`);
+    logger.info(`Checking block height ${currentBlockHeight}`);
     for (let i = 0; i < instances.length; i++) {
         let actions;
         try {
@@ -37,12 +38,16 @@ async function settlementCycle() {
         }
         if (actions > 0) {
             logger.info(
-                `${actions} unsettled actions found for ${instances[i].contractAddress}, ${
+                `${actions} unsettled actions found for ${prettierAddress(
+                    instances[i].contractAddress
+                )}, ${
                     (Date.now() - instances[i].startTime - MAX_WAIT_MS) / 1000
                 } seconds until settle`
             );
         } else {
-            logger.info(`No unsettled actions found for ${instances[i].contractAddress}`);
+            logger.info(
+                `No unsettled actions found for ${prettierAddress(instances[i].contractAddress)}`
+            );
             continue;
         }
         let shouldSettle =
@@ -62,7 +67,9 @@ async function settlementCycle() {
                 instances[i].lastAttemptBlock = currentBlockHeight;
                 feepayerNonce++;
             } catch (err) {
-                logger.error(`Error settling ${instances[i].contractAddress}: ${err}`);
+                logger.error(
+                    `Error settling ${prettierAddress(instances[i].contractAddress)}: ${err}`
+                );
             }
         } else if (actions === 0) {
             instances[i].startTime = Date.now();
