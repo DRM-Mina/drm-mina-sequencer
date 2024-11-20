@@ -29,3 +29,5 @@ async function insertOrUpdateGames() {
 }
 
 await insertOrUpdateGames();
+
+process.exit(0);
