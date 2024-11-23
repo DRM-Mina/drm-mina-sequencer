@@ -5,6 +5,9 @@ import { DeviceIdentifier } from "drm-mina-contracts/build/src/lib/DeviceIdentif
 import { DeviceSession } from "drm-mina-contracts/build/src/lib/DeviceSessionProof.js";
 import { BundledDeviceSession } from "drm-mina-contracts/build/src/lib/BundledDeviceSessionProof.js";
 import logger from "./logger.js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const minaEndpoint = checkEnv(process.env.MINA_ENDPOINT, "MISSING MINA_ENDPOINT");
 const archiveEndpoint = checkEnv(process.env.ARCHIVE_ENDPOINT, "MISSING ARCHIVE_ENDPOINT");
