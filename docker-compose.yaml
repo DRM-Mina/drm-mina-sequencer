@@ -72,6 +72,10 @@ services:
         build:
             context: ./
             dockerfile: ./docker/settlement/Dockerfile
+        environment:
+            - DRM_ADDR1=B62qkBz8sKUr48HbnUeVt9WvpUJ6tyK4YmuUsAxTMdQ7Lo9bX8iw364
+            - DRM_ADDR2=B62qjubSRcRR2FHN1AMuTy2nAvmAUfof6L6EovgixmoE7DykvZYzz6B
+            - DRM_ADDR3=B62qmSFqFLF8wbpGQYriJn13AwDDsCqPrSkbAJz5ZAHknAzDGgRFyMG
 
     redis:
         image: "redis:7.2.6-alpine"
