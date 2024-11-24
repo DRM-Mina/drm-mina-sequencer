@@ -133,11 +133,13 @@ export default class Bundler {
                         proof.publicOutput.gameToken.toBase58()
                     )}: ${proof.publicOutput.currentSessionKey.toString()} -> ${proof.publicOutput.newSessionKey.toString()}`
                 );
-                newProof = await BundledDeviceSession.appendToBundle(
-                    this.gameTokenPubKey,
-                    proof,
-                    this.currentBundledProof
-                );
+                newProof = (
+                    await BundledDeviceSession.appendToBundle(
+                        this.gameTokenPubKey,
+                        proof,
+                        this.currentBundledProof
+                    )
+                ).proof;
             } catch (e) {
                 logger.error(`Error bundling proof: ${e}`);
             }
