@@ -24,8 +24,8 @@ importers:
         specifier: ^16.4.5
         version: 16.4.5
       drm-mina-contracts:
-        specifier: ^0.6
-        version: 0.6.1
+        specifier: ^0.6.3
+        version: 0.6.3
       express:
         specifier: ^4.19.2
         version: 4.21.1
@@ -515,8 +515,8 @@ packages:
     peerDependencies:
       o1js: ^1.9
 
-  drm-mina-contracts@0.6.1:
-    resolution: {integrity: sha512-XAkm+wf+0QLdC7iDcbiQJd4LrTcHV8lF25iOZvBnwDEzid9crIMBQyTRhLw2DDRIO/tVDHJg4lLSWg/cpEgkGQ==}
+  drm-mina-contracts@0.6.3:
+    resolution: {integrity: sha512-dOYlmXCAafrwWUQoxig13wJmQTt6AXKyfk4Tji/5A4XkFBLq9xHmpx5eV2WwpKWJkomZfTdZh7HK0GJqtQDo3Q==}
     engines: {node: '>=18.14.0'}
 
   ecdsa-sig-formatter@1.0.11:
@@ -1517,7 +1517,7 @@ snapshots:
       dotenv: 16.4.5
       o1js: 1.9.0
 
-  drm-mina-contracts@0.6.1:
+  drm-mina-contracts@0.6.3:
     dependencies:
       dotenv: 16.4.5
       o1js: 2.1.0

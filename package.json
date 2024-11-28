@@ -60,7 +60,7 @@
         "bullmq": "^5.21.2",
         "cors": "^2.8.5",
         "dotenv": "^16.4.5",
-        "drm-mina-contracts": "^0.6",
+        "drm-mina-contracts": "^0.6.3",
         "express": "^4.19.2",
         "express-rate-limit": "^7.4.0",
         "graphql": "^16.9.0",
