@@ -4,17 +4,10 @@ ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
 
+COPY . /express
 WORKDIR /express
 
-COPY package.json pnpm-lock.yaml ./
-
-COPY local-packages/o1js/package.json local-packages/o1js/
-
-RUN pnpm install --frozen-lockfile
-
-COPY . .
-
-RUN pnpm run build
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
 EXPOSE 3333
 
