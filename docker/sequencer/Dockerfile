@@ -6,7 +6,7 @@ RUN corepack enable
 COPY . /sequencer
 WORKDIR /sequencer
 
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile
 
 EXPOSE 3333
 
