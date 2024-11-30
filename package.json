@@ -70,7 +70,7 @@
         "mina-signer": "^3.0.7",
         "mongodb": "^6.8.1",
         "mongoose": "^8.6.1",
-        "o1js": "^2",
+        "o1js": "file:./local-packages/o1js",
         "serve-static": "^1.15.0",
         "winston": "^3.14.2"
     },
