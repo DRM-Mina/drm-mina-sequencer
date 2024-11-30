@@ -54,8 +54,8 @@ importers:
         specifier: ^8.6.1
         version: 8.7.1
       o1js:
-        specifier: ^2
-        version: 2.1.0
+        specifier: file:./local-packages/o1js
+        version: file:local-packages/o1js
       serve-static:
         specifier: ^1.15.0
         version: 1.16.2
@@ -921,6 +921,11 @@ packages:
 
   o1js@2.1.0:
     resolution: {integrity: sha512-d3S4ouWHlzne86gVCiMWp+jELqsNdIAzSCzV5QLqK2hyhTclHXDENivzlP/RZ44EEns/CaI7LHuwbovCPMhaCw==}
+    engines: {node: '>=18.14.0'}
+    hasBin: true
+
+  o1js@file:local-packages/o1js:
+    resolution: {directory: local-packages/o1js, type: directory}
     engines: {node: '>=18.14.0'}
     hasBin: true
 
@@ -1936,6 +1941,17 @@ snapshots:
       - encoding
 
   o1js@2.1.0:
+    dependencies:
+      blakejs: 1.2.1
+      cachedir: 2.4.0
+      isomorphic-fetch: 3.0.0
+      js-sha256: 0.9.0
+      reflect-metadata: 0.1.14
+      tslib: 2.8.0
+    transitivePeerDependencies:
+      - encoding
+
+  o1js@file:local-packages/o1js:
     dependencies:
       blakejs: 1.2.1
       cachedir: 2.4.0
