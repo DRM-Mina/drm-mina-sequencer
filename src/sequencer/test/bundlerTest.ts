@@ -82,7 +82,9 @@ const createDeviceIdentifierProofs = async () => {
     let isDeviceIdentifierProofsExist = false;
     let deviceIdentifierProofArr = [];
     try {
-        const deviceIdentifierProofsJson = await fs.readFile("deviceIdentifierProofs.json");
+        const deviceIdentifierProofsJson = await fs.readFile(
+            "./cachedProofs/deviceIdentifierProofs.json"
+        );
         console.log("deviceIdentifierProofsJson read");
         deviceIdentifierProofArr = JSON.parse(deviceIdentifierProofsJson.toString());
         console.log("deviceIdentifierProofArr parsed, length:", deviceIdentifierProofArr.length);
@@ -98,11 +100,11 @@ const createDeviceIdentifierProofs = async () => {
             const deviceIdentifierProof = await DeviceIdentifier.proofForDevice(
                 deviceIdentifiers[i]
             );
-            deviceIdentifierProofs.push(deviceIdentifierProof);
+            deviceIdentifierProofs.push(deviceIdentifierProof.proof);
             console.timeEnd(`Proof for device ${i}`);
         }
         await fs.writeFile(
-            "deviceIdentifierProofs.json",
+            "./cachedProofs/deviceIdentifierProofs.json",
             JSON.stringify(deviceIdentifierProofs, null, 2)
         );
     } else {
@@ -115,9 +117,23 @@ const createDeviceIdentifierProofs = async () => {
     }
 };
 
+const fetchGameToken = async (i: number) => {
+    await fetchAccount({
+        publicKey: pubKeys[i],
+        tokenId: TokenId.derive(GameTokenAddr),
+    });
+    console.log(
+        `buyer ${i} game token balance: ${Mina.getBalance(
+            pubKeys[i],
+            TokenId.derive(GameTokenAddr)
+        ).toString()}`
+    );
+};
+
 const buyGames = async () => {
     const pendingTransactions = [];
     for (let i = 0; i < buyerCount; i++) {
+        await fetchGameToken(i);
         const buyTx = await Mina.transaction(
             {
                 sender: pubKeys[i],
@@ -133,16 +149,7 @@ const buyGames = async () => {
         console.log(`Game bought: https://minascan.io/devnet/tx/${pendingTx.hash}`);
         pendingTransactions.push(
             pendingTx.wait().then(async () => {
-                await fetchAccount({
-                    publicKey: pubKeys[i],
-                    tokenId: TokenId.derive(GameTokenAddr),
-                });
-                console.log(
-                    `buyer ${i} game token balance: ${Mina.getBalance(
-                        pubKeys[i],
-                        TokenId.derive(GameTokenAddr)
-                    ).toString()}`
-                );
+                await fetchGameToken(i);
             })
         );
     }
@@ -192,7 +199,7 @@ const deviceRegistrationsOneByOne = async () => {
     await fetchAccount({
         publicKey: DRMAddr,
     });
-    for (let i = 0; i < buyerCount; i++) {
+    for (let i = 4; i < buyerCount; i++) {
         await fetchAccount({
             publicKey: pubKeys[i],
             tokenId: TokenId.derive(GameTokenAddr),
@@ -222,11 +229,68 @@ const deviceRegistrationsOneByOne = async () => {
     }
 };
 
+const deviceChangeOneByOne = async () => {
+    await fetchAccount({
+        publicKey: DRMAddr,
+    });
+    for (let i = 4; i < buyerCount; i++) {
+        await fetchAccount({
+            publicKey: pubKeys[i],
+            tokenId: TokenId.derive(GameTokenAddr),
+        });
+        await fetchAccount({
+            publicKey: pubKeys[i],
+        });
+
+        const registerTx = await Mina.transaction(
+            {
+                sender: pubKeys[i],
+                fee: 1e9,
+            },
+            async () => {
+                await DRMInstance.changeDevice(
+                    pubKeys[i],
+                    deviceIdentifierProofs[i],
+                    UInt64.from(2)
+                );
+            }
+        );
+        await registerTx.prove();
+        const pendingTx = await registerTx.sign([privKeys[i]]).send();
+        console.log(`Device changed: https://minascan.io/devnet/tx/${pendingTx.hash}`);
+        await pendingTx.wait();
+        console.log(`Device ${i} changed`);
+    }
+};
+
+export async function fetchActions(drm: DRM): Promise<number> {
+    let latest_offchain_commitment = await drm.offchainStateCommitments.fetch();
+    const actionStateRange = {
+        fromActionState: latest_offchain_commitment?.actionState,
+    };
+
+    let result = await Mina.fetchActions(drm.address, actionStateRange);
+    if ("error" in result) throw Error(JSON.stringify(result));
+    let actions = result.reduce((accumulator, currentItem) => {
+        return (
+            accumulator +
+            currentItem.actions.reduce((innerAccumulator) => {
+                return innerAccumulator + 1;
+            }, 0)
+        );
+    }, 0);
+
+    return actions;
+}
+
 const settle = async () => {
     console.time("settlement proof");
     await fetchAccount({
         publicKey: DRMAddr,
     });
+
+    const actions = await fetchActions(DRMInstance);
+    console.log(`actions: ${actions}`);
     const proof = await DRMInstance.offchainState.createSettlementProof();
     console.timeEnd("settlement proof");
 
@@ -264,7 +328,7 @@ const createSessions = async () => {
     let isSessionProofsExist = false;
     let sessionProofArr = [];
     try {
-        const sessionProofsJson = await fs.readFile("sessionProofs.json");
+        const sessionProofsJson = await fs.readFile("./cachedProofs/sessionProofs.json");
         console.log("sessionProofsJson read");
         sessionProofArr = JSON.parse(sessionProofsJson.toString());
         console.log("sessionProofArr parsed, length:", sessionProofArr.length);
@@ -280,18 +344,21 @@ const createSessions = async () => {
             console.time(`Session for device ${i}`);
             const pubInput = new DeviceSessionInput({
                 gameToken: GameTokenAddr,
-                currentSessionKey: UInt64.from(1),
-                newSessionKey: UInt64.from(20),
+                currentSessionKey: UInt64.from(200),
+                newSessionKey: UInt64.from(3131),
             });
 
             const sessionProof = await DeviceSession.proofForSession(
                 pubInput,
                 deviceIdentifiers[i]
             );
-            sessionProofs.push(sessionProof);
+            sessionProofs.push(sessionProof.proof);
             console.timeEnd(`Session for device ${i}`);
         }
-        await fs.writeFile("sessionProofs.json", JSON.stringify(sessionProofs, null, 2));
+        await fs.writeFile(
+            "./cachedProofs/sessionProofs.json",
+            JSON.stringify(sessionProofs, null, 2)
+        );
     } else {
         for (let i = 0; i < buyerCount; i++) {
             const sessionProof = await DeviceSessionProof.fromJSON(sessionProofArr[i]);
@@ -302,7 +369,7 @@ const createSessions = async () => {
 
 const submitSessions = async () => {
     for (let i = 0; i < buyerCount; i++) {
-        const res = await axios.post("http://localhost:3333/submit-session", {
+        const res = await axios.post("http://api_drmmina.kadircan.org/submit-session", {
             proof: JSON.stringify(sessionProofs[i].toJSON()),
         });
         if (res.status === 200) {
@@ -328,15 +395,18 @@ const checkSessions = async () => {
 const main = async () => {
     await initializeContracts();
     // await buyGames();
-    // await createDeviceIdentifierProofs();
+    await createDeviceIdentifierProofs();
     // await deviceRegistrationsOneByOne();
     // await settle();
-    // await checkSessions();
+    await checkSessions();
     // await checkDevices();
+    await deviceChangeOneByOne();
     // await createSessions();
     // await submitSessions();
+    // wait 6 minutes for the sessions to be processed
+    // await new Promise((resolve) => setTimeout(resolve, 600000));
     // await settle();
-    await checkSessions();
+    // await checkSessions();
 };
 
 main();

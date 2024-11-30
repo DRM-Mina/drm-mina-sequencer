@@ -60,7 +60,7 @@
         "bullmq": "^5.21.2",
         "cors": "^2.8.5",
         "dotenv": "^16.4.5",
-        "drm-mina-contracts": "^0.5",
+        "drm-mina-contracts": "^0.6.3",
         "express": "^4.19.2",
         "express-rate-limit": "^7.4.0",
         "graphql": "^16.9.0",
@@ -70,7 +70,7 @@
         "mina-signer": "^3.0.7",
         "mongodb": "^6.8.1",
         "mongoose": "^8.6.1",
-        "o1js": "https://pkg.pr.new/o1-labs/o1js@fc16ce3",
+        "o1js": "^2",
         "serve-static": "^1.15.0",
         "winston": "^3.14.2"
     },

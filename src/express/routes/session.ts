@@ -25,8 +25,6 @@ const router: Router = express.Router();
 
 let verificationKey: VerificationKey;
 
-// await proofQueue.setGlobalConcurrency(1);
-
 router.post("/", async (req, res) => {
     try {
         const { proof } = req.body;

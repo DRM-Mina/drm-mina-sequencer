@@ -1,6 +1,6 @@
 import { DRM, offchainState } from "drm-mina-contracts/build/src/DRM.js";
 import { GameToken } from "drm-mina-contracts/build/src/GameToken.js";
-import { Mina, PublicKey } from "o1js";
+import { fetchLastBlock, Mina, PublicKey } from "o1js";
 import { Game } from "./db/schemas.js";
 import dotenv from "dotenv";
 import logger from "./logger.js";
@@ -79,7 +79,7 @@ export async function compileContracts(gameTokenPubkey: PublicKey) {
         console.timeEnd("baseProof");
 
         const bundler = Bundler.getInstance();
-        bundler.setBaseProof(baseProof);
+        bundler.setBaseProof(baseProof.proof);
 
         console.time("offchainState compile");
         await offchainState.compile();
@@ -152,4 +152,9 @@ export async function updateGamePrices(gameContracts: GameContracts[]) {
 
 export function prettierAddress(address: string): string {
     return `${address.slice(0, 4)}...${address.slice(-6)}`;
+}
+
+export async function getBlockHeight() {
+    const block = await fetchLastBlock(minaEndpoint);
+    return Number(block.blockchainLength.toBigint());
 }
