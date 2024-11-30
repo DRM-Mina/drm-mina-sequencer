@@ -14,8 +14,6 @@ RUN pnpm install --frozen-lockfile
 
 COPY . .
 
-RUN cd local-packages/o1js && pnpm run prepublishOnly
-
 RUN pnpm run build
 
 EXPOSE 3333
